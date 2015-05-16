@@ -1,0 +1,262 @@
+diff --git a/configsets/d8_core_full_hhvm3.7.0_mysql_5.5 b/configsets/d8_core_full_hhvm3.7.0_mysql_5.5
+new file mode 100644
+index 0000000..38eadf5
+--- /dev/null
++++ b/configsets/d8_core_full_hhvm3.7.0_mysql_5.5
+@@ -0,0 +1,7 @@
++DCI_HHVMVERSION=3.7.0
++DCI_PHPInterpreter=/usr/bin/hhvm
++DCI_DRUPALBRANCH=8.0.x
++DCI_TESTGROUPS=--all
++DCI_UPDATEREPO=TRUE
++DCI_DBTYPE=mysql
++DCI_DBVER=5.5
+diff --git a/containers/base/hhvm-base/Dockerfile b/containers/base/hhvm-base/Dockerfile
+index 6107c50..2c4360e 100755
+--- a/containers/base/hhvm-base/Dockerfile
++++ b/containers/base/hhvm-base/Dockerfile
+@@ -13,6 +13,23 @@ RUN apt-get clean && apt-get update
+ 
+ # Build packages.
+ # (HHVM stuff goes here)
++#
++RUN apt-get install -y software-properties-common \
++      curl \
++      git \
++      mysql-client \
++      sqlite3
++
++
++RUN apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0x5a16e7281be7a449
++RUN add-apt-repository -y 'deb http://dl.hhvm.com/ubuntu trusty main'
++RUN apt-get update -y
++RUN apt-get install -y hhvm
++
++RUN apt-get install -y apache2 apache2-mpm-worker apache2-dev apache2-utils libapache2-mod-fastcgi
++RUN a2dismod mpm_event && a2enmod mpm_worker alias actions rewrite fastcgi
++
++RUN apt-get clean && apt-get autoremove -y
+ 
+ ##
+ # Composer.
+@@ -32,5 +49,19 @@ COPY ./conf/scripts/start.sh /start.sh
+ COPY ./conf/scripts/foreground.sh /etc/apache2/foreground.sh
+ COPY daemon.sh /daemon.sh
+ 
++COPY ./conf/apache2/vhost.conf /etc/apache2/sites-available/drupal.conf
++RUN a2dissite 000-default.conf
++RUN a2ensite drupal.conf
++
++COPY ./conf/hhvm/server.ini /etc/hhvm/server.ini
++COPY ./conf/hhvm/php.ini /etc/hhvm/php.ini
++
++RUN service hhvm restart
++
+ # Make start.sh executable.
+ RUN chmod 755 /start.sh /daemon.sh
++RUN chown -R www-data:www-data /var/www
++RUN chmod +wx /var/www
++
++EXPOSE 80
++CMD ["/bin/bash", "/start.sh"]
+diff --git a/containers/base/hhvm-base/conf/apache2/vhost.conf b/containers/base/hhvm-base/conf/apache2/vhost.conf
+new file mode 100644
+index 0000000..9266a9d
+--- /dev/null
++++ b/containers/base/hhvm-base/conf/apache2/vhost.conf
+@@ -0,0 +1,34 @@
++<VirtualHost *:80>
++
++  DocumentRoot /var/www/html
++  RewriteEngine On
++
++  <Directory /var/www/html>
++    Options Indexes FollowSymLinks MultiViews
++    AllowOverride All
++    Order allow,deny
++    Allow from all
++  </Directory>
++
++  ErrorLog /var/www/test.apache.error.log
++  ServerSignature Off
++  CustomLog /var/www/test.apache.access.log combined
++
++  Alias /hhvm /hhvm
++  Action hhvm-php-extension /hhvm virtual
++  Action hhvm-hack-extension /hhvm virtual
++
++  FastCgiExternalServer /hhvm -host 127.0.0.1:9010 -pass-header Authorization -idle-timeout 300
++
++  <IfModule mod_fastcgi.c>
++    <FilesMatch \.php$>
++      SetHandler hhvm-php-extension
++    </FilesMatch>
++
++    <FilesMatch \.hh$>
++      SetHandler hhvm-hack-extension
++    </FilesMatch>
++  </IfModule>
++
++</VirtualHost>
++
+diff --git a/containers/base/hhvm-base/conf/hhvm/php.ini b/containers/base/hhvm-base/conf/hhvm/php.ini
+new file mode 100644
+index 0000000..9c93b10
+--- /dev/null
++++ b/containers/base/hhvm-base/conf/hhvm/php.ini
+@@ -0,0 +1,13 @@
++; php options
++session.save_handler = files
++session.save_path = /var/lib/php5
++session.gc_maxlifetime = 1440
++
++; hhvm specific 
++hhvm.log.level = Warning
++hhvm.log.always_log_unhandled_exceptions = true
++hhvm.log.runtime_error_reporting_level = 8191
++hhvm.mysql.typed_results = false
++
++extension_dir = /etc/hhvm
++
+diff --git a/containers/base/hhvm-base/conf/hhvm/server.ini b/containers/base/hhvm-base/conf/hhvm/server.ini
+new file mode 100644
+index 0000000..7b31ca8
+--- /dev/null
++++ b/containers/base/hhvm-base/conf/hhvm/server.ini
+@@ -0,0 +1,14 @@
++pid = /var/run/hhvm/pid
++
++; hhvm specific 
++
++hhvm.server.port = 9010
++hhvm.server.type = fastcgi
++hhvm.server.default_document = index.php
++hhvm.log.use_log_file = true
++hhvm.log.file = /var/log/hhvm/error.log
++hhvm.repo.central.path = /var/run/hhvm/hhvm.hhbc
++hhvm.server.user = www-data
++hhvm.server.fix_path_info = true
++hhvm.log.level = Info
++
+diff --git a/containers/base/hhvm-base/conf/scripts/start.sh b/containers/base/hhvm-base/conf/scripts/start.sh
+index d782461..a3956b5 100755
+--- a/containers/base/hhvm-base/conf/scripts/start.sh
++++ b/containers/base/hhvm-base/conf/scripts/start.sh
+@@ -2,9 +2,9 @@
+ 
+ #GET ALL INFO FROM /var/www/html/test.info:
+ source /var/www/html/test.info
+-alias php='/opt/phpenv/shims/php'
++alias php='/usr/bin/hhvm'
+ 
+-export PATH=$HOME/bin:/opt/phpenv/shims:$PATH
++export PATH=$HOME/bin:$PATH
+ 
+ # We need the newest drush version
+ export DRUSH="/.composer/vendor/drush/drush/drush"
+@@ -79,7 +79,9 @@ mkdir -p /var/www/html/sites/default/files/  /var/www/html/sites/simpletest
+ chown -fR www-data /var/www/html/sites/default/files/ /var/www/html/sites/simpletest
+ 
+ # Run the test suite.
+-echo ""
++echo "RUNSCRIPT IS: ${DCI_RUNSCRIPT}"
++echo "EXTRA IS: ${EXTRA}"
++echo "TESTGROUPS IS: ${DCI_TESTGROUPS}"
+ echo "Operation [run tests]..."
+ echo "export TERM=linux && cd /var/www/html && ${DCI_RUNSCRIPT} ${EXTRA} ${DCI_TESTGROUPS} | tee /var/www/html/test.stdout"
+ sudo -E -u www-data -H sh -c "export TERM=linux && cd /var/www/html && ${DCI_RUNSCRIPT} ${EXTRA} ${DCI_TESTGROUPS} | tee /var/www/html/test.stdout"
+diff --git a/src/DrupalCI/Containers/ExecutableContainers/HHVM/hhvm-base.yml b/src/DrupalCI/Containers/ExecutableContainers/HHVM/hhvm-base.yml
+new file mode 100644
+index 0000000..319cb52
+--- /dev/null
++++ b/src/DrupalCI/Containers/ExecutableContainers/HHVM/hhvm-base.yml
+@@ -0,0 +1,10 @@
++Image:            drupalci/hhvm-base
++
++# Mount point within the container for mounting the codebase directory / git checkout
++Mountpoint:       "/var/www/html"
++
++# Docker command to use as the container PID 1
++Cmd:              ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
++
++
++
+diff --git a/src/DrupalCI/Plugin/BuildSteps/environment/HhvmEnvironment.php b/src/DrupalCI/Plugin/BuildSteps/environment/HhvmEnvironment.php
+new file mode 100644
+index 0000000..088a392
+--- /dev/null
++++ b/src/DrupalCI/Plugin/BuildSteps/environment/HhvmEnvironment.php
+@@ -0,0 +1,45 @@
++<?php
++/**
++ * @file
++ * Contains \DrupalCI\Plugin\BuildSteps\environment\PhpEnvironment
++ *
++ * Processes "environment: php:" parameters from within a job definition,
++ * ensures appropriate Docker container images exist, and defines the
++ * appropriate execution container for communication back to JobBase.
++ */
++
++namespace DrupalCI\Plugin\BuildSteps\environment;
++use DrupalCI\Console\Output;
++use DrupalCI\Plugin\JobTypes\JobInterface;
++
++/**
++ * @PluginID("hhvm")
++ */
++class HhvmEnvironment extends EnvironmentBase {
++
++  /**
++   * {@inheritdoc}
++   */
++  public function run(JobInterface $job, $data) {
++    // Data format: '5.5' or array('5.4', '5.5')
++    // $data May be a string if one version required, or array if multiple
++    // Normalize data to the array format, if necessary
++    $data = is_array($data) ? $data : [$data];
++    Output::writeLn("<info>Parsing required PHP container image names ...</info>");
++    $containers = $job->getExecContainers();
++    $containers['hhvm'] = $this->buildImageNames();
++    $valid = $this->validateImageNames($containers['hhvm'], $job);
++    if (!empty($valid)) {
++      $job->setExecContainers($containers);
++      // Actual creation and configuration of the executable containers will occur in the 'execute' plugin.
++    }
++  }
++
++  protected function buildImageNames() {
++    $images = [];
++    $images['hhvm-3.7.0']['image'] = "drupalci/hhvm-base";
++    Output::writeLn("<comment>Adding image: <options=bold>drupalci/hhvm-base</options=bold></comment>");
++
++    return $images;
++  }
++}
+diff --git a/src/DrupalCI/Plugin/JobTypes/simpletest/SimpletestJob.php b/src/DrupalCI/Plugin/JobTypes/simpletest/SimpletestJob.php
+index edc340e..197a8bc 100644
+--- a/src/DrupalCI/Plugin/JobTypes/simpletest/SimpletestJob.php
++++ b/src/DrupalCI/Plugin/JobTypes/simpletest/SimpletestJob.php
+@@ -153,7 +153,7 @@ class SimpletestJob extends JobBase {
+     'DCI_SQLite' => '/var/www/html/results/simpletest.sqlite',
+     'DCI_Concurrency' => 4,
+     'DCI_XMLOutput' => '/var/www/html/results/xml',
+-    "DCI_PHPInterpreter" => "/opt/phpenv/shims/php",
++    "DCI_PHPInterpreter" => "/usr/bin/hvvm",
+     "DCI_Color" => 'true',
+   );
+ }
+diff --git a/src/DrupalCI/Plugin/JobTypes/simpletest/drupalci.yml b/src/DrupalCI/Plugin/JobTypes/simpletest/drupalci.yml
+index ab53247..922aec9 100644
+--- a/src/DrupalCI/Plugin/JobTypes/simpletest/drupalci.yml
++++ b/src/DrupalCI/Plugin/JobTypes/simpletest/drupalci.yml
+@@ -2,8 +2,8 @@
+ environment:
+   db:
+     - %DCI_DBVersion%
+-  web:
+-    - %DCI_PHPVersion%
++  hhvm:
++    - %DCI_HHVMVersion%
+ setup:
+   checkout:
+     # DCI_UseLocalCodebase plugin can override the checkout array to look like:

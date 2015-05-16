@@ -2,9 +2,9 @@
 
 #GET ALL INFO FROM /var/www/html/test.info:
 source /var/www/html/test.info
-alias php='/opt/phpenv/shims/php'
+alias php='/usr/bin/hhvm'
 
-export PATH=$HOME/bin:/opt/phpenv/shims:$PATH
+export PATH=$HOME/bin:$PATH
 
 # We need the newest drush version
 export DRUSH="/.composer/vendor/drush/drush/drush"
@@ -79,7 +79,9 @@ mkdir -p /var/www/html/sites/default/files/  /var/www/html/sites/simpletest
 chown -fR www-data /var/www/html/sites/default/files/ /var/www/html/sites/simpletest
 
 # Run the test suite.
-echo ""
+echo "RUNSCRIPT IS: ${DCI_RUNSCRIPT}"
+echo "EXTRA IS: ${EXTRA}"
+echo "TESTGROUPS IS: ${DCI_TESTGROUPS}"
 echo "Operation [run tests]..."
 echo "export TERM=linux && cd /var/www/html && ${DCI_RUNSCRIPT} ${EXTRA} ${DCI_TESTGROUPS} | tee /var/www/html/test.stdout"
 sudo -E -u www-data -H sh -c "export TERM=linux && cd /var/www/html && ${DCI_RUNSCRIPT} ${EXTRA} ${DCI_TESTGROUPS} | tee /var/www/html/test.stdout"

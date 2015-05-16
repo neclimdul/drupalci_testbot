@@ -2,8 +2,8 @@
 environment:
   db:
     - %DCI_DBVersion%
-  web:
-    - %DCI_PHPVersion%
+  hhvm:
+    - %DCI_HHVMVersion%
 setup:
   checkout:
     # DCI_UseLocalCodebase plugin can override the checkout array to look like:
