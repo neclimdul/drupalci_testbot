@@ -84,11 +84,7 @@ class InitConfigCommand extends DrupalCICommandBase {
       // Copy default files over to the configs directory
       // TODO: Currently using placeholder files.  Populate file contents.
       $finder = new Finder();
-      $directory = "./configsets";
-      // TODO: This means we can only execute the command from the drupalci
-      // directory.  Need to be able to run from anywhere - determine how to
-      // get the current script execution directory (not the /bin symlink!)
-      // and construct an absolute directory path above.
+      $directory = __DIR__ . '/../../../../../configsets';
       $iterator = $finder->files()->in($directory);
       foreach ($iterator as $file) {
         copy($file->getRealPath(), $configsdir . "/" . $file->getFileName() );

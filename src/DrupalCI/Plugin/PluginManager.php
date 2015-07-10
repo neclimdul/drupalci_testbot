@@ -34,7 +34,7 @@ class PluginManager {
    * Discovers the list of available plugins.
    */
   protected function discoverPlugins() {
-    $dir = "src/DrupalCI/Plugin/$this->superPluginType";
+    $dir = __DIR__ . "/../../DrupalCI/Plugin/$this->superPluginType";
     $plugin_definitions = [];
     foreach (new \DirectoryIterator($dir) as $file) {
       if ($file->isDir() && !$file->isDot()) {

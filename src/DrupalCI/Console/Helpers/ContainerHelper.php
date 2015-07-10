@@ -19,9 +19,10 @@ class ContainerHelper extends DrupalCIHelperBase {
   public function getContainers($type){
     // TODO: Make sure we're starting from the drupalci root
     $option = array();
-    $containers = glob('containers/'.$type.'/*', GLOB_ONLYDIR);
+    $containers = glob(__DIR__ . '/../../../../containers/' . $type . '/*', GLOB_ONLYDIR);
     foreach ($containers as $container) {
-      $option['drupalci/' . explode('/', $container)[2]] = $container;
+      $parts = preg_replace('#^' . preg_quote(__DIR__ . '/../../../../', '#') . '#', '', $container);
+      $option['drupalci/' . explode('/', $parts)[2]] = $container;
     }
     return $option;
   }

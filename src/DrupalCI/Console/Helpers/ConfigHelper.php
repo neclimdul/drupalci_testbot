@@ -33,7 +33,7 @@ class ConfigHelper extends DrupalCIHelperBase {
   public function getDefaultConfigSets() {
     $configsets = array();
     // TODO: Fix the hardcoded directory
-    $options = glob('./configsets/*');
+    $options = glob('../../../../configsets/*');
     foreach ($options as $option) {
       $filename = array_pop(explode('/', $option));
       $configsets[$filename] = $option;

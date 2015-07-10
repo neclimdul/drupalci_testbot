@@ -259,7 +259,7 @@ class JobBase extends ContainerBase implements JobInterface {
    }
 
   protected function discoverPlugins() {
-    $dir = 'src/DrupalCI/Plugin';
+    $dir = __DIR__ . '/../../../DrupalCI/Plugin';
     $plugin_definitions = [];
     foreach (new \DirectoryIterator($dir) as $file) {
       if ($file->isDir() && !$file->isDot()) {
