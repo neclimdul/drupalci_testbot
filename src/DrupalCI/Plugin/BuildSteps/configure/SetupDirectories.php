@@ -44,11 +44,16 @@ class SetupDirectories {
     if (empty($arguments['DCI_CheckoutDir'])) {
       // Case:  No explicit working directory defined.
       // Generate a working directory in the system temporary directory.
-      $tmpdir = $this->create_tempdir($job, sys_get_temp_dir() . '/drupalci/', $job->jobType . "-");
-      if (!$tmpdir) {
-        // Error creating checkout directory
-        $job->errorOutput("Error", "Failure encountered while attempting to create a local checkout directory");
-        return FALSE;
+      $build_id = $job->getBuildId();
+      $tmpdir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $build_id;
+      if (!is_dir($tmpdir)) {
+        $result = mkdir($tmpdir, 0777, TRUE);
+        // $tmpdir = $this->create_tempdir($job, sys_get_temp_dir() . '/drupalci/', $job->jobType . "-");
+        if (!$result) {
+          // Error creating checkout directory
+          $job->errorOutput("Error", "Failure encountered while attempting to create a local checkout directory");
+          return FALSE;
+        }
       }
       Output::writeLn("<comment>Checkout directory created at <info>$tmpdir</info></comment>");
       $job->setBuildVar('DCI_CheckoutDir', $tmpdir);
@@ -72,7 +77,7 @@ class SetupDirectories {
     // Update the checkout directory in the class object
     $job->setWorkingDir($arguments['DCI_CheckoutDir']);
   }
-
+/*
   protected function create_tempdir(JobInterface $job, $dir=NULL,$prefix=NULL) {
     // PHP seems to have trouble creating temporary unique directories with the appropriate permissions,
     // So we create a temp file to get the unique filename, then mkdir a directory in it's place.
@@ -95,7 +100,7 @@ class SetupDirectories {
       return;
     }
   }
-
+*/
   protected function create_local_checkout_dir(JobInterface $job) {
     $arguments = $job->getBuildVars();
     $directory = $arguments['DCI_CheckoutDir'];
