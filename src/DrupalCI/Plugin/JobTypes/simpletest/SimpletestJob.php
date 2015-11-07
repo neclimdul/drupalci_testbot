@@ -45,7 +45,7 @@ class SimpletestJob extends JobBase {
     'DCI_Concurrency' => 4,
     'DCI_GitCommitHash' => '',
     // 'DCI_XMLOutput' => '/var/www/html/results/xml',
-    'DCI_PHPInterpreter' => '/opt/phpenv/shims/php',
+    'DCI_PHPInterpreter' => '/usr/local/bin/php',
     'DCI_RunOptions' => 'color;keep-results',
     'DCI_SyntaxCheck' => TRUE,
   );
