@@ -46,8 +46,8 @@ RUN HOME=/ /usr/local/bin/composer global require drush/drush:dev-master \
 
 
 COPY ./conf/apache2/vhost.conf /etc/apache2/sites-available/drupal.conf
-COPY ./conf/php/conf/php.ini /usr/local/etc/php/php.ini
-COPY ./conf/php/conf/php-cli.ini /usr/local/etc/php/php-cli.ini
+COPY ./conf/php/php.ini /usr/local/etc/php/php.ini
+COPY ./conf/php/php-cli.ini /usr/local/etc/php/php-cli.ini
 
 ##
 # Apache Configuration.
