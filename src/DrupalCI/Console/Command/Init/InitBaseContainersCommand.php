@@ -57,7 +57,7 @@ class InitBaseContainersCommand extends DrupalCICommandBase {
         if (!in_array($name, $container_names)) {
           // Not a valid base container.  Remove it and warn the user
           unset($names[$key]);
-          $output->writeln("<error>Received an invalid base container name. Skipping build of the $name container.");
+          $this->logger->error("<error>Received an invalid base container name. Skipping build of the $name container.");
         }
       }
     }
@@ -84,7 +84,7 @@ class InitBaseContainersCommand extends DrupalCICommandBase {
     }
 
     if (empty($names)) {
-      $output->writeln("<error>No valid base container names provided. Aborting.");
+      $this->logger->error("<error>No valid base container names provided. Aborting.</error>");
       return;
     }
     else {
@@ -103,7 +103,7 @@ class InitBaseContainersCommand extends DrupalCICommandBase {
       $returnCode = $cmd->run($cmdinput, $output);
       // TODO: Error handling
     }
-    $output->writeln('');
+    $this->logger->info('');
   }
 
   protected function getBaseContainerNames($containers, InputInterface $input, OutputInterface $output) {

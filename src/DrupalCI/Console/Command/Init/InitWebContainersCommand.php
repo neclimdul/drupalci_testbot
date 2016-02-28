@@ -36,7 +36,7 @@ class InitWebContainersCommand extends DrupalCICommandBase {
    * {@inheritdoc}
    */
   public function execute(InputInterface $input, OutputInterface $output) {
-    $output->writeln("<info>Executing init:web</info>");
+    $this->logger->info("<info>Executing init:web</info>");
 
     # Generate array of general arguments to pass downstream
     $options = array();
@@ -57,7 +57,7 @@ class InitWebContainersCommand extends DrupalCICommandBase {
         if (!in_array($name, $container_names)) {
           // Not a valid web container.  Remove it and warn the user
           unset($names[$key]);
-          $output->writeln("<error>Received an invalid web container name. Skipping build of the $name container.");
+          $this->logger->error("<error>Received an invalid web container name. Skipping build of the $name container.");
         }
       }
     }
@@ -84,7 +84,7 @@ class InitWebContainersCommand extends DrupalCICommandBase {
     }
 
     if (empty($names)) {
-      $output->writeln("<error>No valid web container names provided. Aborting.");
+      $this->logger->error("<error>No valid web container names provided. Aborting.");
       return;
     }
     else {

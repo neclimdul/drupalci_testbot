@@ -35,8 +35,8 @@ class PullCommand extends DrupalCICommandBase {
    * {@inheritdoc}
    */
   public function execute(InputInterface $input, OutputInterface $output) {
+    $this->logger->debug("Executing pull ...");
     Output::setOutput($output);
-    $output->writeln("<info>Executing pull ...</info>");
     $images = $input->getArgument('container_name');
     // TODO: Validate passed arguments
     foreach ($images as $image) {
@@ -50,7 +50,7 @@ class PullCommand extends DrupalCICommandBase {
         {
           $tag = 'latest';
         }
-        Output::writeln("<comment>Pulling <options=bold>$container:$tag</options=bold> container</comment>");
+        $this->logger->notice("Pulling <options=bold>$container:$tag</options=bold> container");
         $this->pull($container ,$tag , $input);
     }
   }
@@ -84,16 +84,7 @@ class PullCommand extends DrupalCICommandBase {
       $progressbar = new ProgressBar(Output::getOutput(), $total_transfer);
       $progressbar->start();
       $progressbar->advance($advance);
-
-      // foreach($progressInformation as $status){
-      //   if(isset($status['status']) && isset($status['id'])){
-      //     Output::write("<comment>".$status['id']." - ".$status['status']."</comment>");
-      //     Output::write("<comment>".$status['id']."</comment>");
-      //   }
-      // }
     });
-    // $response->getBody()->getContents();
-    // Output::writeln((string) $response);
     Output::writeln("");
   }
 }

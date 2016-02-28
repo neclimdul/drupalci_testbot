@@ -45,15 +45,15 @@ class InitConfigCommand extends DrupalCICommandBase {
 
     if (file_exists($homedir . "/.drupalci") && !($input->getOption('force'))) {
       # Output 'configuration directory already exists, use --force to reset the DrupalCI environment' message.
-      $output->writeln('<error>WARNING: The ~/.drupalci configuration directory already exists.</error>');
-      $output->writeln('<comment>Use the --force option to reset your DrupalCI environment back to default.</comment>');
-      $output->writeln('<comment>Note that this will wipe out all files in your ~/.drupalci directory, including existing configuration sets.</comment>');
+      $this->logger->error('<error>WARNING: The ~/.drupalci configuration directory already exists.</error>');
+      $this->logger->info('<comment>Use the --force option to reset your DrupalCI environment back to default.</comment>');
+      $this->logger->info('<comment>Note that this will wipe out all files in your ~/.drupalci directory, including existing configuration sets.</comment>');
       return;
     }
     else {
       if ($input->getOption('force')) {
         $helper = $this->getHelper('question');
-        $output->writeln("<info>This will wipe out all files in your ~/.drupalci directory, including existing configuration sets.</info>");
+        $this->logger->info("<info>This will wipe out all files in your ~/.drupalci directory, including existing configuration sets.</info>");
         $message = "<question>Are you sure you wish to continue with this action? (y/n)</question> ";
         $question = new ConfirmationQuestion($message, false);
         if (!$helper->ask($input, $output, $question)) {
@@ -75,10 +75,10 @@ class InitConfigCommand extends DrupalCICommandBase {
       $configlink = $homedir . "/.drupalci/config";
       if (!file_exists($configsdir)) {
         mkdir($configsdir, 0777, true);
-        $output->writeln("<info>Created $configsdir directory.</info>");
+        $this->logger->info("<info>Created $configsdir directory.</info>");
       }
       else {
-        $output->writeln("<info>Re-using existing $configsdir directory.</info>");
+        $this->logger->info("<info>Re-using existing $configsdir directory.</info>");
       }
 
       // Copy default files over to the configs directory
@@ -93,12 +93,12 @@ class InitConfigCommand extends DrupalCICommandBase {
       foreach ($iterator as $file) {
         copy($file->getRealPath(), $configsdir . "/" . $file->getFileName() );
       }
-      $output->writeln("<info>Created default configuration sets.</info>");
+      $this->logger->info("<info>Created default configuration sets.</info>");
 
       $helper = new ConfigHelper();
       // Copy a default setting file over to the current config
       $helper->activateConfig('d8_core_full_php5.5_mysql');
-      $output->writeln("<info>Created initial config set at </info><comment>$configlink</comment>");
+      $this->logger->info("<info>Created initial config set at </info><comment>$configlink</comment>");
     }
   }
 }

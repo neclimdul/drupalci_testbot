@@ -38,19 +38,19 @@ class BuildCommand extends DrupalCICommandBase {
    */
   public function execute(InputInterface $input, OutputInterface $output) {
     Output::setOutput($output);
-    $output->writeln("<info>Executing build ...</info>");
+    $this->logger->info("<info>Executing build ...</info>");
     $helper = new ContainerHelper();
     $containers = $helper->getAllContainers();
     $names = $input->getArgument('container_name');
     // TODO: Validate passed arguments
     foreach ($names as $name) {
       if (in_array($name, array_keys($containers))) {
-        Output::writeln("<comment>Building <options=bold>$name</options=bold> container</comment>");
+        $this->logger->notice("<comment>Building <options=bold>$name</options=bold> container</comment>");
         $this->build($name, $input);
       }
       else {
         // Container name not found.  Skip build.
-        Output::writeln("<error>No '$name' container found.  Skipping container build.</error>");
+        $this->logger->error("<error>No '$name' container found.  Skipping container build.</error>");
         // TODO: Error handling
       }
     }
@@ -65,31 +65,19 @@ class BuildCommand extends DrupalCICommandBase {
     $container_path = $containers[$name];
     $docker = $this->getDocker();
     $context = new Context($container_path);
-    Output::writeln("-------------------- Start build script --------------------");
+    $this->logger->info("-------------------- Start build script --------------------");
     $response = $docker->build($context, $name, function ($output) {
       if (isset($output['stream'])) {
-        Output::writeLn('<info>' . $output['stream'] . '</info>');
+        $this->logger->info('<info>' . $output['stream'] . '</info>');
       }
       elseif (isset($output['error'])) {
-        Output::error('Error', $output['error']);
+        $this->logger->error($output['error']);
       }
     });
 
-    Output::writeln("--------------------- End build script ---------------------");
+    $this->logger->info("--------------------- End build script ---------------------");
     $response->getBody()->getContents();
-    Output::writeln((string) $response);
+    $this->logger->info((string) $response);
 
-    // TODO: Capture return value and determine whether build was successful or not, throwing an error if it isn't.
-    // (This may already automatically throw an exception within docker-php)
-    /* LEGACY CODE - original notification
-    if ($return_var === 0) {
-      $output->writeln("<comment>Container <options=bold>$name</options=bold> build complete.</comment>");
-      $output->writeln("<comment>The $name container image should now be available.</comment>");
-    }
-    else {
-      $output->writeln("<error>Build script exited with a non-zero error code: <options=bold>$return_var</options=bold></error>");
-      $output->writeln("<comment>Please review the output above to determine the root cause.</comment>");
-    }
-    */
   }
 }

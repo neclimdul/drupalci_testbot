@@ -39,7 +39,7 @@ class DockerRemoveCommand extends DrupalCICommandBase {
     );
     $type = $input->getArgument('type');
     if (!in_array($type, $types)) {
-      $output->writeln('<error>' . $type . ' is not a legal container type.</error>');
+      $this->logger->error($type . " is not a legal container type.");
     }
 
     if ($input->getOption('list')) {
@@ -58,7 +58,7 @@ class DockerRemoveCommand extends DrupalCICommandBase {
     $helper = new ContainerHelper();
     $containers = $helper->getAllContainers();
     foreach ($containers as $containerLabel => $containerName) {
-      Output::writeln("<comment>$containerLabel, $containerName</comment>");
+      $this->logger->info("<comment>$containerLabel, $containerName</comment>");
     }
   }
 
@@ -105,7 +105,7 @@ class DockerRemoveCommand extends DrupalCICommandBase {
     exec($cmd_docker_psa, $createdContainers);
 
     if($createdContainers) {
-      Output::writeln('<comment>Removing containers.</comment>');
+      $this->logger->info('<comment>Removing containers.</comment>');
       exec($cmd_docker_ps, $runningContainers);
       if(!empty($runningContainers)){
         // kill DCI running containers
@@ -118,27 +118,22 @@ class DockerRemoveCommand extends DrupalCICommandBase {
       exec( $cmd_docker_rm, $rmContainers);
 
       // list removed containers
-      Output::writeln('Removed Containers:');
-      Output::writeln($rmContainers);
-
-      // DEBUG
-      //Output::writeln($rmContainers);
+      $this->logger->notice('Removed Containers:');
+      $this->logger->notice($rmContainers);
 
       //check to for any DCI after the kill and remove
       exec($cmd_docker_psa, $remove_check);
 
       if (!empty($remove_check)) {
-        Output::writeln('<error>Error:</error>');
-        Output::writeln($remove_check);
+        $this->logger->error('<error>Error:</error>' . $remove_check);
       }
       else {
-        Output::writeln('<comment>Remove complete.</comment>');
+        $this->logger->info('<comment>Remove complete.</comment>');
       }
     }
     else {
       // nothing to remove
-      Output::writeln('<comment>Nothing to Remove</comment> ');
+      $this->logger->info('<comment>Nothing to Remove</comment> ');
     }
-
   }
 }

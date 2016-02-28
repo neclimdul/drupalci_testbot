@@ -38,7 +38,7 @@ class InitPhpContainersCommand extends DrupalCICommandBase {
    * {@inheritdoc}
    */
   public function execute(InputInterface $input, OutputInterface $output) {
-    $output->writeln("<info>Executing init:php</info>");
+    $this->logger->info("<info>Executing init:php</info>");
 
     # Generate array of general arguments to pass downstream
     $options = array();
@@ -59,7 +59,7 @@ class InitPhpContainersCommand extends DrupalCICommandBase {
         if (!in_array($name, $container_names)) {
           // Not a valid web container.  Remove it and warn the user
           unset($names[$key]);
-          $output->writeln("<error>Received an invalid php container name. Skipping build of the $name container.");
+          $this->logger->error("<error>Received an invalid php container name. Skipping build of the $name container.");
         }
       }
     }
@@ -86,7 +86,7 @@ class InitPhpContainersCommand extends DrupalCICommandBase {
     }
 
     if (empty($names)) {
-      $output->writeln("<error>No valid php container names provided. Aborting.");
+      $this->logger->error("<error>No valid php container names provided. Aborting.</error>");
       return;
     }
     else {
@@ -105,7 +105,7 @@ class InitPhpContainersCommand extends DrupalCICommandBase {
       $returnCode = $cmd->run($cmdinput, $output);
       // TODO: Error handling
     }
-    $output->writeln('');
+    $this->logger->info('');
   }
 
   protected function getPhpContainerNames($containers, InputInterface $input, OutputInterface $output) {

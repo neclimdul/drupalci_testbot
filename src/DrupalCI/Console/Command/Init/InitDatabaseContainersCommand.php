@@ -36,7 +36,7 @@ class InitDatabaseContainersCommand extends DrupalCICommandBase {
    * {@inheritdoc}
    */
   public function execute(InputInterface $input, OutputInterface $output) {
-    $output->writeln("<info>Executing init:database</info>");
+    $this->logger->info("<info>Executing init:database</info>");
 
     # Generate array of general arguments to pass downstream
     $options = array();
@@ -57,7 +57,7 @@ class InitDatabaseContainersCommand extends DrupalCICommandBase {
         if (!in_array($name, $container_names)) {
           // Not a valid db container.  Remove it and warn the user
           unset($names[$key]);
-          $output->writeln("<error>Received an invalid db container name. Skipping build of the $name container.");
+          $this->logger->error("<error>Received an invalid db container name. Skipping build of the $name container.");
         }
       }
     }
@@ -83,7 +83,7 @@ class InitDatabaseContainersCommand extends DrupalCICommandBase {
     }
 
     if (empty($names)) {
-      $output->writeln("<error>No valid database container names provided. Aborting.");
+      $this->logger->error("<error>No valid database container names provided. Aborting.");
       return;
     }
     else {
@@ -101,7 +101,7 @@ class InitDatabaseContainersCommand extends DrupalCICommandBase {
       $returnCode = $cmd->run($cmdinput, $output);
       // TODO: Error handling
     }
-    $output->writeln('');
+    $this->logger->info('');
   }
 
   protected function getDbContainerNames($containers, InputInterface $input, OutputInterface $output) {

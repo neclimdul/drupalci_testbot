@@ -33,15 +33,15 @@ class InitDockerCommand extends DrupalCICommandBase {
    */
   public function execute(InputInterface $input, OutputInterface $output) {
     # Check if Docker is installed
-    $output->writeln("<info>Executing init:docker</info>");
+    $this->logger->info("<info>Executing init:docker</info>");
     $docker = new DockerHelper();
     if ($bin = $docker->locateBinary()) {
-      $output->writeln("<comment>Docker binary located at $bin</comment>");
+      $this->logger->info("<comment>Docker binary located at $bin</comment>");
       $docker->getStatus($input, $output);
     }
     else {
       # If not, attempt to install docker
-      $output->writeln('<comment>Docker binary not found.</comment>');
+      $this->logger->info('<comment>Docker binary not found.</comment>');
       $helper = $this->getHelperSet()->get('question');
       $question = new ConfirmationQuestion('<fg=cyan;bg=blue>DrupalCI will now attempt to install Docker on your system.  Continue (y/n)?</fg=cyan;bg=blue>', FALSE);
       if (!$helper->ask($input, $output, $question)) {

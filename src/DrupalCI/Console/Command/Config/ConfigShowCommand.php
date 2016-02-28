@@ -51,7 +51,7 @@ class ConfigShowCommand extends DrupalCICommandBase {
       // If no argument passed, prompt the user for which config set to display
       $qhelper = $this->getHelper('question');
       $message = "<question>Choose the number corresponding to which configuration set(s) to display:</question> ";
-      $output->writeln($message);
+      $this->logger->info($message);
       $message="<comment>Separate multiple values with commas.</comment>";
       $options = array_merge(array_keys($configsets), array('current', 'all'));
       $question = new ChoiceQuestion($message, $options, 0);
@@ -66,33 +66,31 @@ class ConfigShowCommand extends DrupalCICommandBase {
     foreach ($names as $key => $name) {
       if ($name == 'current') {
         $env_vars = $helper->getCurrentEnvVars();
-        $output->writeln("<info>---------------- Start config set: <options=bold>CURRENT DCI ENVIRONMENT</options=bold></info> ----------------</info>");
-        $output->writeln("<comment;options=bold>Defined in ~/.drupalci/config:</comment;options=bold>");
+        $this->logger->info("<info>---------------- Start config set: <options=bold>CURRENT DCI ENVIRONMENT</options=bold></info> ----------------</info>");
+        $this->logger->info("<comment;options=bold>Defined in ~/.drupalci/config:</comment;options=bold>");
         $contents = $helper->getCurrentConfigSetContents();
         foreach ($contents as $line) {
           $parsed = explode("=", $line);
           if (!empty($parsed[0]) && !empty($parsed[1])) {
-            $output->writeln("<comment>" . $parsed[0] . ": </comment><info>" . $parsed[1] . "</info>");
+            $this->logger->info("<comment>" . $parsed[0] . ": </comment><info>" . $parsed[1] . "</info>");
           }
         }
         if (!empty($env_vars)) {
-          $output->writeln("<comment;options=bold>Defined in Environment Variables:</comment;options=bold>");
+          $this->logger->info("<comment;options=bold>Defined in Environment Variables:</comment;options=bold>");
           foreach ($env_vars as $env_key => $env_value) {
-            $output->writeln("<comment>" . $env_key . ": </comment><info>" . $env_value . "</info>");
+            $this->logger->info("<comment>" . $env_key . ": </comment><info>" . $env_value . "</info>");
           }
-          $output->writeln("<info>------------ End config set: <options=bold>CURRENT DCI ENVIRONMENT</options=bold></info> ----------------</info>");
-          $output->writeln('');
+          $this->logger->info("<info>------------ End config set: <options=bold>CURRENT DCI ENVIRONMENT</options=bold></info> ----------------</info>");
         }
       }
       elseif (in_array($name, array_keys($configsets))) {
         $contents = file_get_contents($configsets[$name]);
-        $output->writeln("<info>---------------- Start config set: <options=bold>$name</options=bold></info> ----------------</info>");
-        $output->writeln($contents);
-        $output->writeln("<info>------------ End config set: <options=bold>$name</options=bold></info> ----------------</info>");
-        $output->writeln('');
+        $this->logger->info("<info>---------------- Start config set: <options=bold>$name</options=bold></info> ----------------</info>");
+        $this->logger->info($contents);
+        $this->logger->info("<info>------------ End config set: <options=bold>$name</options=bold></info> ----------------</info>");
       }
       else {
-        $output->writeln("<error>Configuration set '$name' not found.  Skipping.</error>");
+        $this->logger->error("<error>Configuration set '$name' not found.  Skipping.</error>");
       }
     }
   }

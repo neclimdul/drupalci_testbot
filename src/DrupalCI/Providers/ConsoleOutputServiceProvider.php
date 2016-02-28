@@ -19,8 +19,8 @@ class ConsoleOutputServiceProvider implements ServiceProviderInterface {
     $this->output = $output;
   }
 
-  public function register(Container $pimple) {
-    $pimple['console.output'] = $this->output;
+  public function register(Container $container) {
+    $container['console.output'] = $this->output;
   }
 
 }

@@ -54,18 +54,18 @@ class ConfigLoadCommand extends DrupalCICommandBase {
     }
 
     if (empty($configsets[$selected])) {
-      $output->writeln("<error>Unable to load configset. The specified configset does not exist.");
+      $this->logger->error("<error>Unable to load configset. The specified configset does not exist.");
       return;
     }
 
-    $output->writeln("You chose configset: " . $configsets[$selected]);
+    $this->logger->info("You chose configset: " . $configsets[$selected]);
 
     $qhelper = $this->getHelper('question');
-    $output->writeln("<info>This will wipe out your current DrupalCI defaults and replace them with the values from the <option=bold>$selected</option=bold> configset.</info>");
+    $this->logger->info("<info>This will wipe out your current DrupalCI defaults and replace them with the values from the <option=bold>$selected</option=bold> configset.</info>");
     $message = "<question>Are you sure you wish to continue? (y/n)</question> ";
     $question = new ConfirmationQuestion($message, false);
     if (!$qhelper->ask($input, $output, $question)) {
-      $output->writeln("<comment>Action cancelled.</comment>");
+      $this->logger->info("<comment>Action cancelled.</comment>");
       return;
     }
     $helper->activateConfig($selected);

@@ -37,9 +37,9 @@ class ConfigListCommand extends DrupalCICommandBase {
   public function execute(InputInterface $input, OutputInterface $output) {
     $helper = new ConfigHelper();
     $configsets = array_keys($helper->getAllConfigSets());
-    $output->writeln("<comment>Available config sets:</comment>");
+    $this->logger->info("<comment>Available config sets:</comment>");
     foreach ($configsets as $set) {
-      $output->writeln("<info>$set</info>");
+      $this->logger->info("<info>$set</info>");
     }
   }
 }

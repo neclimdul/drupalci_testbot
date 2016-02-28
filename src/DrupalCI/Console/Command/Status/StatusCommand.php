@@ -32,46 +32,45 @@ class StatusCommand extends DrupalCICommandBase {
    * {@inheritdoc}
    */
   public function execute(InputInterface $input, OutputInterface $output) {
-    $output->writeln("<info>Running Status Checks ... </info>");
+    $this->logger->info("Running Status Checks ...");
+
     # Check whether Docker is installed
     $docker = new DockerHelper();
     $docker->getStatus($input, $output);
 
     # Check whether base containers have been built and output list of available containers
-    $this->containerStatus($input, $output);
+    $this->containerStatus();
 
     # Check whether configuration sets have been created and output list of available config sets
-    $this->configStatus($input, $output);
+    $this->configStatus();
 
     # Check whether testing dependencies (phpunit, etc) have been installed
-    $this->dependencyStatus($input, $output);
+    $this->dependencyStatus();
 
     # Output error counts and final status result
-    $this->statusOutput($output);
+    $this->statusOutput();
 
   }
 
-
-
-  protected function containerStatus(InputInterface $input, OutputInterface $output) {
+  protected function containerStatus() {
     # TODO: Check whether base containers have been built and output list of available containers
   }
 
-  protected function configStatus(InputInterface $input, OutputInterface $output) {
+  protected function configStatus() {
     # TODO: Check whether configuration sets have been created and output list of available config sets
   }
 
-  protected function dependencyStatus(InputInterface $input, OutputInterface $output) {
+  protected function dependencyStatus() {
     # TODO: Check whether testing dependencies (phpunit, etc) have been installed
   }
 
-  protected function statusOutput(OutputInterface $output) {
+  protected function statusOutput() {
     if (!empty($this->errors)) {
-      $output->writeln("<error>Found " . count($this->errors) . " errors.");
+      $this->logger->error("Found " . count($this->errors) . " errors.");
       # TODO: Output count by error type.
     }
     else {
-      $output->writeln("<info>No errors found!</info>");
+      $this->logger->info("No errors found!");
     }
 
   }

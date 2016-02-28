@@ -83,7 +83,7 @@ class RunCommand extends DrupalCICommandBase {
       $template_file = $job->getDefaultDefinitionTemplate($job_type);
     }
 
-    Output::writeLn("<info>Using job definition template: <options=bold>$template_file</options=bold></info>");
+    $this->logger->notice("<comment>Using job definition template: <options=bold>$template_file</options=bold></comment>");
 
     // Load our job template file into the job definition.  If $template_file
     // doesn't exist, this will trigger a FileNotFound or ParseError exception.
@@ -161,13 +161,13 @@ class RunCommand extends DrupalCICommandBase {
         $status = $job->getJobResults()->getResultByStep($build_stage, $build_step);
         if ($status == 'Error') {
           // Step returned an error.  Halt execution.
-          Output::error("Execution Error", "Error encountered while executing job build step <options=bold>$build_stage:$build_step</options=bold>");
+          $this->logger->error("Error encountered while executing job build step <options=bold>$build_stage:$build_step</options=bold>");
           $job->getJobResults()->updateStepStatus($build_stage, $build_step, "Error", $status);
           break 2;
         }
         if ($status == 'Fail') {
           // Step returned an failure.  Halt execution.
-          Output::error("Execution Failure", "Build step <options=bold>$build_stage:$build_step</options=bold> FAILED");
+          $this->logger->error("Build step <options=bold>$build_stage:$build_step</options=bold> FAILED");
           break 2;
         }
         $job_results->updateStepStatus($build_stage, $build_step, 'Completed');

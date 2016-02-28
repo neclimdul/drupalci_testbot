@@ -42,20 +42,20 @@ class ConfigSaveCommand extends DrupalCICommandBase {
     // Ensure we have a 'current' config
     $current = $helper->getCurrentConfigSetParsed();
     if (empty($current)) {
-      $output->writeln("<error>Unable to save an empty configuration set.</error>");
-      $output->writeln("<info>Use the <option=bold>'drupalci config:set [variablename]=[value]'</option=bold> command to set some configuration defaults before attempting to save a new config set.</info>");
+      $this->logger->error("<error>Unable to save an empty configuration set.</error>");
+      $this->logger->info("<info>Use the <option=bold>'drupalci config:set [variablename]=[value]'</option=bold> command to set some configuration defaults before attempting to save a new config set.</info>");
       return;
     }
     // Check if configset name already exists
     if (in_array($config_name, array_keys($configsets))) {
       // Prompt the user that this will overwrite the existing configuration setting file
       $qhelper = $this->getHelper('question');
-      $output->writeln("<error>The <option=bold>$config_name</option=bold> config set already exists.</error>");
-      $output->writeln("<info>Continuing will overwrite the existing file with the current configuration values.</info>");
+      $this->logger->error("<error>The <option=bold>$config_name</option=bold> config set already exists.</error>");
+      $this->logger->info("<info>Continuing will overwrite the existing file with the current configuration values.</info>");
       $message = "<question>Are you sure you wish to continue? (yes/no)</question> ";
       $question = new ConfirmationQuestion($message, false);
       if (!$qhelper->ask($input, $output, $question)) {
-        $output->writeln("<comment>Action cancelled.</comment>");
+        $this->logger->info("<comment>Action cancelled.</comment>");
         return;
       }
     }

@@ -57,7 +57,7 @@ class ConfigResetCommand extends DrupalCICommandBase {
       // Is passed config one of the default sets?
       if (in_array($name, array_keys($defaultsets))) {
         // TODO: Prompt user (You are about to overwrite the $name configuration set. (Y/N/All)
-        $output->writeln("<comment>This action will overwrite any local changes you have made to the <options=bold>$name</options=bold> configuration set.</comment>");
+        $this->logger->info("<comment>This action will overwrite any local changes you have made to the <options=bold>$name</options=bold> configuration set.</comment>");
         $question = new ConfirmationQuestion("<question>Do you wish to continue? (yes/no)</question> ", false);
         if (!$qhelper->ask($input, $output, $question)) {
           continue;
@@ -69,7 +69,7 @@ class ConfigResetCommand extends DrupalCICommandBase {
       }
       elseif (in_array($name, array_keys($configsets))) {
         // TODO: Prompt user (This action will delete the $name configuration set
-        $output->writeln("<comment>This action will delete the <options=bold>$name</options=bold> configuration set.</comment>");
+        $this->logger->info("<comment>This action will delete the <options=bold>$name</options=bold> configuration set.</comment>");
         $question = new ConfirmationQuestion("<question>Do you wish to continue? (yes/no)</question> ", false);
         if (!$qhelper->ask($input, $output, $question)) {
           continue;
@@ -80,7 +80,7 @@ class ConfigResetCommand extends DrupalCICommandBase {
       }
       else {
         // TODO: Prompt user (Invalid configuration set)
-        $output->writeln("<error>The '$name' configuration set does not exist.</error></comment>");
+        $this->logger->error("<error>The '$name' configuration set does not exist.</error>");
       }
     }
   }
