@@ -112,6 +112,7 @@ class ContainerCommand extends BuildStepBase {
   protected function checkCommandStatus($signal) {
     if ($signal !==0) {
       Output::error('Error', "Received a non-zero return code from the last command executed on the container.  (Return status: " . $signal . ")");
+      $this->update('Error', "Error", "Received a non-zero exit code from last command executed on the container.  (Return status: $signal )");
       return 1;
     }
     else {
