@@ -23,6 +23,7 @@ class WebEnvironment extends PhpEnvironment {
    */
   public function run(JobInterface $job, $data) {
     // Data format: '5.5' or array('5.4', '5.5')
+    // May also include minor version, eg. '5.5.9'
     // $data May be a string if one version required, or array if multiple
     // Normalize data to the array format, if necessary
     $data = is_array($data) ? $data : [$data];
@@ -44,8 +45,17 @@ class WebEnvironment extends PhpEnvironment {
   protected function buildImageNames($data, JobInterface $job) {
     $images = [];
     foreach ($data as $key => $php_version) {
-      $images["web-$php_version"]['image'] = "drupalci/web-$php_version";
-      Output::writeLn("<comment>Adding image: <options=bold>drupalci/web-$php_version</options=bold></comment>");
+      // Drop minor version if present
+      $pattern = "/^(\d+(\.\d+)?)/";
+      if (preg_match($pattern, $php_version, $matches)) {
+        $version = $matches[0];
+        $images["web-$version"]['image'] = "drupalci/web-$version";
+        Output::writeLn("<comment>Adding image: <options=bold>drupalci/web-$version</options=bold></comment>");
+      }
+      else {
+        // TODO: Error Handling
+        // For now, the container name will not be found and things will bail out.
+      }
     }
     return $images;
   }

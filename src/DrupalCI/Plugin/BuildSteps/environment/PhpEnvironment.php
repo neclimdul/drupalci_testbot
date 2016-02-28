@@ -44,8 +44,17 @@ class PhpEnvironment extends EnvironmentBase {
   protected function buildImageNames($data, JobInterface $job) {
     $images = [];
     foreach ($data as $key => $php_version) {
-      $images["php-$php_version"]['image'] = "drupalci/php-$php_version";
-      Output::writeLn("<comment>Adding image: <options=bold>drupalci/php-$php_version</options=bold></comment>");
+      // Drop minor version if present
+      $pattern = "/^(\d+(\.\d+)?)/";
+      if (preg_match($pattern, $php_version, $matches)) {
+        $version = $matches[0];
+        $images["php-$php_version"]['image'] = "drupalci/php-$php_version";
+        Output::writeLn("<comment>Adding image: <options=bold>drupalci/php-$php_version</options=bold></comment>");
+      }
+      else {
+        // TODO: Error Handling
+        // For now, the container name will not be found and things will bail out.
+      }
     }
     return $images;
   }
