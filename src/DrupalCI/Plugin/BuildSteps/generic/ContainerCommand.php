@@ -8,6 +8,9 @@
 
 namespace DrupalCI\Plugin\BuildSteps\generic;
 
+use Docker\API\Model\ExecConfig;
+use Docker\API\Model\ExecStartConfig;
+use Docker\Manager\ExecManager;
 use DrupalCI\Console\Output;
 use DrupalCI\Plugin\BuildSteps\BuildStepBase;
 use DrupalCI\Plugin\JobTypes\JobInterface;
@@ -48,33 +51,52 @@ class ContainerCommand extends BuildStepBase {
       foreach ($configs as $type => $containers) {
         foreach ($containers as $container) {
           $id = $container['id'];
-          $instance = $manager->find($id);
           $short_id = substr($id, 0, 8);
           Output::writeLn("<info>Executing on container instance $short_id:</info>");
           foreach ($data as $cmd) {
             Output::writeLn("<fg=magenta>$cmd</fg=magenta>");
-            $exec = ["/bin/bash", "-c", $cmd];
-            $exec_id = $manager->exec($instance, $exec, TRUE, TRUE, TRUE, TRUE);
+
+            $exec_config = new ExecConfig();
+            $exec_config->setTty(FALSE);
+            $exec_config->setAttachStderr(TRUE);
+            $exec_config->setAttachStdout(TRUE);
+            $exec_config->setAttachStdin(FALSE);
+            $command = ["/bin/bash", "-c", $cmd];
+            $exec_config->setCmd($command);
+
+            $exec_manager = $job->getDocker()->getExecManager();
+            $response = $exec_manager->create($id, $exec_config);
+
+            $exec_id = $response->getId();
             Output::writeLn("<info>Command created as exec id " . substr($exec_id, 0, 8) . "</info>");
-            $result = $manager->execstart($exec_id, function ($result, $type) {
-              if ($type === 1) {
-                Output::write("$result");
-              }
-              else {
-                Output::error('Error', $result);
-                $this->update("Error", "SystemError", "Unable to execute command on container.");
-              }
+
+            $exec_start_config = new ExecStartConfig();
+            $exec_start_config->setTty(FALSE);
+            $exec_start_config->setDetach(FALSE);
+
+            $stream = $exec_manager->start($exec_id, $exec_start_config, [], ExecManager::FETCH_STREAM);
+
+            $stdoutFull = "";
+            $stderrFull = "";
+            $stream->onStdout(function ($stdout) use (&$stdoutFull) {
+              $stdoutFull .= $stdout;
+              Output::write($stdout);
             });
-            // Response stream is never read you need to simulate a wait in order to get output
-            $result->getBody()->getContents();
-            Output::writeLn((string) $result);
-            $inspection = $manager->execinspect($exec_id);
-            $this->setExitCode($inspection->ExitCode);
+            $stream->onStderr(function ($stderr) use (&$stderrFull) {
+              $stderrFull .= $stderr;
+              Output::write($stderr);
+            });
+            $stream->wait();
+
+            $exec_command_exit_code = $exec_manager->find($exec_id)->getExitCode();
             Output::writeLn("Command Exit Code: " . $this->getExitCode());
 
-            if ($this->checkCommandStatus($inspection->ExitCode) !==0) {
+            if ($exec_command_exit_code !==0) {
+              Output::error('Error', "Received a non-zero return code from the last command executed on the container.  (Return status: $exec_command_exit_code)");
               $job->error();
               break 3;
+            }
+            else {
             }
           }
         }
@@ -87,17 +109,6 @@ class ContainerCommand extends BuildStepBase {
     else {
       $this->update("Completed", "Warning", "No command passed to build step for execution");
       return;
-    }
-  }
-
-  protected function checkCommandStatus($signal) {
-    if ($signal !==0) {
-      Output::error('Error', "Received a non-zero return code from the last command executed on the container.  (Return status: " . $signal . ")");
-      $this->update("Completed", "Error", "Received a non-zero exit code from last command executed on the container.  (Return status: $signal )");
-      return 1;
-    }
-    else {
-      return 0;
     }
   }
 }

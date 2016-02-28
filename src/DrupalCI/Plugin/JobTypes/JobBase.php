@@ -6,6 +6,8 @@
 
 namespace DrupalCI\Plugin\JobTypes;
 
+use Docker\API\Model\ContainerConfig;
+use Docker\API\Model\HostConfig;
 use Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use DrupalCI\Console\Output;
@@ -16,15 +18,12 @@ use DrupalCI\Job\Results\Artifacts\BuildArtifactList;
 use DrupalCI\Job\CodeBase\JobCodeBase;
 use DrupalCI\Job\Definition\JobDefinition;
 use DrupalCI\Job\Results\JobResults;
-use DrupalCIResultsApi\Api;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Tests\Output\ConsoleOutputTest;
 use Symfony\Component\Process\Process;
 use DrupalCI\Console\Jobs\ContainerBase;
 use Docker\Docker;
-use Docker\Http\DockerClient as Client;
+use Docker\DockerClient as Client;
 use Symfony\Component\Yaml\Yaml;
-use Docker\Container;
 use PDO;
 use Symfony\Component\Console\Event\ConsoleExceptionEvent;
 use Symfony\Component\Console\ConsoleEvents;
@@ -203,8 +202,9 @@ class JobBase extends ContainerBase implements JobInterface, Injectable {
   /**
    * @return \Docker\Docker
    */
-  public function getDocker() {
-    $client = Client::createWithEnv();
+  public function getDocker()
+  {
+    $client = Client::createFromEnv();
     if (null === $this->docker) {
       $this->docker = new Docker($client);
     }
@@ -366,15 +366,31 @@ class JobBase extends ContainerBase implements JobInterface, Injectable {
       $this->setDefaultCommand($config);
     }
 
-    $instance = new Container($config);
-    $manager->create($instance);
+    // Instantiate container
+    // TODO: Use a normalizer
+    $container_config = new ContainerConfig();
+    $container_config->setImage($config['Image']);
+    $container_config->setCmd($config['Cmd']);
+    $host_config = new HostConfig();
+    $host_config->setBinds($config['HostConfig']['Binds']);
+    $host_config->setLinks($config['HostConfig']['Links']);
+    $container_config->setHostConfig($host_config);
+    $parameters = [];
+    if (!empty($config['name'])) {
+      $parameters = [ 'name' => $config['name'] ];
+    }
 
-    $manager->run($instance, function($output, $type) {
-      fputs($type === 1 ? STDOUT : STDERR, $output);
-    }, [], true);
+    $create_result = $manager->create($container_config, $parameters);
+    $container_id = $create_result->getId();
 
-    $container['id'] = $instance->getID();
-    $container['name'] = $instance->getName();
+    // TODO: Ensure there are no stopped containers with the same name (currently throws fatal)
+    $response = $manager->start($container_id);
+    // TODO: Catch and exception if doesn't return 204.
+
+    $service_container = $manager->find($container_id);
+    $container['id'] = $service_container->getID();
+    $container['name'] = $service_container->getName();
+    $container['ip'] = $service_container->getNetworkSettings()->getIPAddress();
     $container['created'] = TRUE;
     $short_id = substr($container['id'], 0, 8);
     Output::writeln("<comment>Container <options=bold>${container['name']}</options=bold> created from image <options=bold>${container['image']}</options=bold> with ID <options=bold>$short_id</options=bold></comment>");
@@ -438,12 +454,13 @@ class JobBase extends ContainerBase implements JobInterface, Injectable {
     $docker = $this->getDocker();
     $manager = $docker->getContainerManager();
     $instances = array();
+
+    $images = $manager->findAll();
+
     foreach ($manager->findAll() as $running) {
-      $repo = $running->getImage()->getRepository();
-      $tag = $running->getImage()->getTag();
+      $repo = $running->getImage();
       $id = substr($running->getID(), 0, 8);
-      $instance_key = !strcmp('latest',$tag) ? $repo : $repo . ':' . $tag;
-      $instances[$instance_key] = $id;
+      $instances[$repo] = $id;
     };
     foreach ($this->serviceContainers[$container_type] as $key => $image) {
       if (in_array($image['image'], array_keys($instances))) {
@@ -453,7 +470,7 @@ class JobBase extends ContainerBase implements JobInterface, Injectable {
         $container = $manager->find($instances[$image['image']]);
         $container_id = $container->getID();
         $container_name = $container->getName();
-        $container_ip = $container->getRuntimeInformations()["NetworkSettings"]["IPAddress"];
+        $container_ip = $container->getNetworkSettings()->getIPAddress();
         $this->serviceContainers[$container_type][$key]['id'] = $container_id;
         $this->serviceContainers[$container_type][$key]['name'] = $container_name;
         $this->serviceContainers[$container_type][$key]['ip'] = $container_ip;
@@ -465,20 +482,36 @@ class JobBase extends ContainerBase implements JobInterface, Injectable {
       // Get container configuration, which defines parameters such as exposed ports, etc.
       $configs = $this->getContainerConfiguration($image['image']);
       $config = $configs[$image['image']];
+
       // TODO: Allow classes to modify the default configuration before processing
+
       // Instantiate container
-      $container = new Container($config);
+
+      // TODO: Use a normalizer
+      $container_config = new ContainerConfig();
+      $container_config->setImage($config['Image']);
+      $host_config = new HostConfig();
+      $host_config->setBinds($config['HostConfig']['Binds']);
+      $container_config->setHostConfig($host_config);
+      $parameters = [];
       if (!empty($config['name'])) {
-        $container->setName($config['name']);
+        $parameters = [ 'name' => $config['name'] ];
       }
+
+      $create_result = $manager->create($container_config, $parameters);
+      $container_id = $create_result->getId();
+
       // Create the docker container instance, running as a daemon.
       // TODO: Ensure there are no stopped containers with the same name (currently throws fatal)
-      $manager->run($container, function($output, $type) {
-        fputs($type === 1 ? STDOUT : STDERR, $output);
-      }, [], true);
+      $response = $manager->start($container_id);
+      // TODO: Catch and exception if doesn't return 204.
+
+      $container = $manager->find($container_id);
+
       $container_id = $container->getID();
       $container_name = $container->getName();
-      $container_ip = $container->getRuntimeInformations()["NetworkSettings"]["IPAddress"];
+      $container_ip = $container->getNetworkSettings()->getIPAddress();
+
       $this->serviceContainers[$container_type][$key]['id'] = $container_id;
       $this->serviceContainers[$container_type][$key]['name'] = $container_name;
       $this->serviceContainers[$container_type][$key]['ip'] = $container_ip;

@@ -33,7 +33,7 @@
         "symfony/process": "2.8.*",
         "doctrine/common": "*.*",
         "composer/composer": "1.0.*@dev",
-        "stage1/docker-php": "dev-ryanaslett-rawstreams-1",
+        "docker-php/docker-php": ">=1.22.x-dev",
         "pimple/pimple": "^3"
     },
     "require-dev": {
