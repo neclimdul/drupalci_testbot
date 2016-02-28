@@ -29,6 +29,18 @@ class PHPVersion {
    *     ... )
    */
   public function process(array &$definition, $php_version, $dci_variables) {
+    // Only process the variable if a 'minor' version is defined.
+    $pattern = "/^(\d+(\.\d+)?(\.\d+)?)/";
+    if (!preg_match($pattern, $php_version, $matches)) {
+      // Invalid PHP Version passed.
+      // TODO: Add Error Handling
+      return;
+    }
+    if (empty($matches[3])) {
+      // No minor version specified
+      return;
+    }
+
     // Add the 'setphpversion' entry to the pre-install build step section
     if (empty($definition['setup']['command'])) {
       $definition['setup']['command'] = [];
