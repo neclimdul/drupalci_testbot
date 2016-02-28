@@ -91,12 +91,9 @@ class ContainerCommand extends BuildStepBase {
             $exec_command_exit_code = $exec_manager->find($exec_id)->getExitCode();
             Output::writeLn("Command Exit Code: " . $exec_command_exit_code);
 
-            if ($exec_command_exit_code !==0) {
-              Output::error('Error', "Received a non-zero return code from the last command executed on the container.  (Return status: $exec_command_exit_code)");
+            if ($this->checkCommandStatus($exec_command_exit_code) !==0) {
               $job->error();
               break 3;
-            }
-            else {
             }
           }
         }
@@ -109,6 +106,16 @@ class ContainerCommand extends BuildStepBase {
     else {
       $this->update("Completed", "Warning", "No command passed to build step for execution");
       return;
+    }
+  }
+
+  protected function checkCommandStatus($signal) {
+    if ($signal !==0) {
+      Output::error('Error', "Received a non-zero return code from the last command executed on the container.  (Return status: " . $signal . ")");
+      return 1;
+    }
+    else {
+      return 0;
     }
   }
 }
