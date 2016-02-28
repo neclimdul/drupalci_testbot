@@ -89,7 +89,7 @@ class ContainerCommand extends BuildStepBase {
             $stream->wait();
 
             $exec_command_exit_code = $exec_manager->find($exec_id)->getExitCode();
-            Output::writeLn("Command Exit Code: " . $this->getExitCode());
+            Output::writeLn("Command Exit Code: " . $exec_command_exit_code);
 
             if ($exec_command_exit_code !==0) {
               Output::error('Error', "Received a non-zero return code from the last command executed on the container.  (Return status: $exec_command_exit_code)");
