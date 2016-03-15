@@ -89,6 +89,10 @@ else
   sed -i 's/; sys_temp_dir = "\/tmp"/sys_temp_dir = "\/var\/lib\/drupalci\/web\/"/g' /etc/php5/cli/php.ini
   sed -i 's/variables_order = \"GPCS\"/variables_order = \"EGPCS\"/g' /etc/php5/cli/php.ini
 
+  echo "Installing drupal for testing"
+  git clone --branch 8.1.0-beta1 --depth 1 https://git.drupal.org/project/drupal.git /tmp/drupal
+  php composer.phar install --no-progress -d /tmp/drupal
+
   touch PROVISIONED
 
 fi
