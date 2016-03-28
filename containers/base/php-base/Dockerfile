@@ -63,6 +63,7 @@ RUN apt-get clean && apt-get update && \
     software-properties-common \
     sqlite3 \
     sudo \
+    supervisor \
     unixODBC-dev \
     unzip \
     sqlite3 \
@@ -120,3 +121,7 @@ RUN bash -c "wget http://getcomposer.org/composer.phar && chmod 775 composer.pha
 # Drush and dependencies.
 RUN HOME=/ /usr/local/bin/composer global require drush/drush:dev-master && \
     /.composer/vendor/drush/drush/drush --version
+
+COPY ./conf/start.sh /usr/local/bin/start.sh
+COPY ./conf/supervisor-phantomjs.conf /etc/supervisor/conf.d/phantomjs.conf
+RUN chmod 775 /usr/local/bin/start.sh

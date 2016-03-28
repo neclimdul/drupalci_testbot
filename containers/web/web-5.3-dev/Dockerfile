@@ -44,4 +44,4 @@ COPY ./conf/opt-php.ini /opt/phpenv/versions/5.3.29/etc/php.ini
 COPY ./conf/opt-apc.ini /opt/phpenv/versions/5.3.29/etc/conf.d/apc.ini
 COPY ./conf/opt-gettext.ini /opt/phpenv/versions/5.3.29/etc/conf.d/gettext.ini
 
-CMD ["/bin/bash", "/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+CMD ["/usr/local/bin/start.sh"]
