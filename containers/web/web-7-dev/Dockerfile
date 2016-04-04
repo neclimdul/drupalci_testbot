@@ -17,13 +17,12 @@ RUN buildDeps=" \
     libxslt1-dev \
     libyaml-dev \
     ncurses-dev \
-    unzip \
     " \
     && set -x \
     && apt-get update && apt-get install -y curl git libc6 libcomerr2 libfreetype6 libgcc1 \
     libmcrypt4 libgcrypt20 libgpg-error0 libicu52 libjpeg62-turbo libkeyutils1 liblzma5 \
     libpng12-0 libpq5 libreadline6 libtidy-0.99-0 libtinfo5 libxslt1.1 libyaml-0-2 mysql-client \
-    postgresql-client sqlite3 sudo zlib1g --no-install-recommends \
+    postgresql-client sqlite3 sudo unzip zlib1g --no-install-recommends \
     && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-install bcmath exif ftp gettext intl mcrypt mbstring mysqli opcache \
     pcntl pdo_mysql pdo_pgsql pgsql shmop soap sockets sysvsem sysvshm tidy wddx xmlrpc xsl zip \
@@ -32,6 +31,16 @@ RUN buildDeps=" \
     && echo | pecl install channel://pecl.php.net/APCu-4.0.7 \
     && pecl install yaml < /usr/lib/x86_64-linux-gnu \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
+
+##
+# PhantomJS
+##
+RUN curl -L https://github.com/bprodoehl/phantomjs/releases/download/v2.0.0-20150528/phantomjs-2.0.0-20150528-u1404-x86_64.zip -o ~/phantomjs-2.0.zip && \
+    unzip -j ~/phantomjs-2.0.zip -d ~/phantomjs && \
+    mv ~/phantomjs/phantomjs /usr/bin/phantomjs && \
+    rm -f ~/phantomjs-2.0.zip && \
+    rm -rf ~/phantomjs && \
+    chmod 755 /usr/bin/phantomjs
 
 ##
 # Composer.
