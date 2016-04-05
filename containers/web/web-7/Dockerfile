@@ -31,7 +31,7 @@ RUN buildDeps=" \
     && docker-php-ext-install gd \
     && echo | pecl install channel://pecl.php.net/APCu-4.0.7 \
     && pecl install yaml < /usr/lib/x86_64-linux-gnu \
-    && curl -L https://github.com/bprodoehl/phantomjs/releases/download/v2.0.0-20150528/phantomjs-2.0.0-20150528-u1404-x86_64.zip -o ~/phantomjs-2.0.zip && \
+    && curl -L https://github.com/bprodoehl/phantomjs/releases/download/v2.0.0-20150528/phantomjs-2.0.0-20150528-u1404-x86_64.zip -o ~/phantomjs-2.0.zip \
     && unzip -j ~/phantomjs-2.0.zip -d ~/phantomjs \
     && mv ~/phantomjs/phantomjs /usr/bin/phantomjs \
     && rm -f ~/phantomjs-2.0.zip \
