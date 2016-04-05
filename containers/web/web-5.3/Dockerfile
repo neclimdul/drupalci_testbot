@@ -1,36 +1,45 @@
 FROM       ubuntu:trusty
 MAINTAINER drupalci
-##
-# Base.
-##
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV HOME /root
 ENV DRUPALCI TRUE
+# PHP 5.3.29
+ENV PHP_VERSION 5.3.29
 
-RUN apt-get clean \
+RUN buildDeps=" \
+    build-essential \
+    ccache \
+    libicu-dev \
+    libfreetype6-dev \
+    libjpeg-dev \
+    libldap2-dev \
+    libmcrypt-dev \
+    libssl-dev \
+    libxslt-dev \
+    libyaml-dev \
+    ncurses-dev \
+    make \
+    php5-cli \
+    php5-dev \
+    software-properties-common \
+    " \
+    && set -x \
     && apt-get update \
-    && apt-get install -y unzip vim-tiny wget \
     && apt-get install -y \
         apache2 apache2-mpm-prefork apache2-dev \
-        build-essential \
         bison \
-        ccache \
-        curl \
         freetds-dev \
         git \
         libaspell-dev \
         libbz2-dev \
         libc-client-dev \
-        libcurl3-dev \
         libcurl4-openssl-dev \
         libdb5.1-dev \
-        libfreetype6-dev \
+        libfontconfig \
         libgmp3-dev \
-        libicu-dev \
-        libjpeg-dev \
-        libldap2-dev \
-        libmcrypt-dev \
+        libicu52 \
+        libjpeg8 \
         libmhash-dev \
         libmysqlclient-dev \
         libmysqlclient15-dev \
@@ -44,38 +53,74 @@ RUN apt-get clean \
         libt1-dev \
         libtidy-dev \
         libxml2-dev \
-        libssl-dev \
         libxpm-dev \
-        libxslt-dev \
-        libyaml-dev \
+        libwebp5 \
         libz-dev \
-        make \
         mysql-client \
-        ncurses-dev \
-        php5-dev \
         re2c \
-        software-properties-common \
         sqlite3 \
         sudo \
         unixODBC-dev \
-        unzip \
-        sqlite3 \
-        libicu52 \
-        libjpeg8 \
-        libfontconfig \
-        libwebp5 \
-        unzip \
-    && apt-get clean \
-    && apt-get autoremove -y \
-    && rm /etc/cron.d/php5
-
-##
-# Composer.
-##
-
-RUN bash -c "wget http://getcomposer.org/composer.phar \
-  && chmod 775 composer.phar \
-  && sudo mv composer.phar /usr/local/bin/composer"
+        --no-install-recommends \
+    && apt-get install -y $buildDeps --no-install-recommends \
+    && add-apt-repository -y ppa:n-muench/programs-ppa2 \
+    && apt-get update \
+    && apt-get install -y curl libcurl3-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -o /usr/local/bin/composer http://getcomposer.org/composer.phar \
+    && chmod 775 /usr/local/bin/composer \
+    && HOME=/ /usr/bin/php /usr/local/bin/composer global require drush/drush:7.0.0 \
+    && /.composer/vendor/drush/drush/drush --version \
+    && mkdir /usr/include/freetype2/freetype \
+    && ln -s /usr/include/freetype2/freetype.h /usr/include/freetype2/freetype/freetype.h \
+    && gpg --keyserver pgp.mit.edu --recv-keys 0B96609E270F565C13292B24C13C70B87267B52D 0A95E9A026542D53835E3F3A7DEC4E69FC9C83D7 \
+    && cd / \
+    && curl -SL "http://us2.php.net/get/php-$PHP_VERSION.tar.bz2/from/this/mirror" -o php.tar.bz2 \
+    && curl -SL "http://us2.php.net/get/php-$PHP_VERSION.tar.bz2.asc/from/this/mirror" -o php.tar.bz2.asc \
+    && gpg --verify php.tar.bz2.asc \
+    && mkdir -p /usr/src/php \
+    && tar -xf php.tar.bz2 -C /usr/src/php --strip-components=1 \
+    && rm php.tar.bz2* \
+    && cd /usr/src/php \
+    && ./configure \
+    --with-apxs2=/usr/bin/apxs2 \
+    --with-gd \
+    --enable-sockets \
+    --with-jpeg-dir=/usr \
+    --with-png-dir=/usr \
+    --enable-exif \
+    --enable-zip \
+    --with-zlib \
+    --with-zlib-dir=/usr \
+    --with-kerberos \
+    --with-openssl \
+    --with-mcrypt=/usr \
+    --enable-soap \
+    --enable-xmlreader \
+    --with-xsl \
+    --enable-ftp \
+    --enable-cgi \
+    --with-curl=/usr \
+    --with-tidy \
+    --with-xmlrpc \
+    --enable-sysvsem \
+    --enable-sysvshm \
+    --enable-shmop \
+    --with-mysql=mysqlnd \
+    --with-mysqli=mysqlnd \
+    --with-pdo-mysql=mysqlnd \
+    --with-pdo-sqlite \
+    --enable-pcntl \
+    --with-readline \
+    --enable-mbstring \
+    --disable-debug \
+    --enable-bcmath \
+    --with-gettext=shared \
+    --with-freetype-dir=/usr/lib/x86_64-linux-gnu \
+    && make -j"$(nproc)" \
+    && make install \
+    && echo | pecl install apc \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
 
 ##
 # Apache Configuration.
@@ -88,91 +133,9 @@ RUN a2dismod mpm_event \
     && a2dissite 000-default.conf \
     && a2ensite drupal
 
-
-##
-# Drush
-##
-RUN apt-get clean \
-  && apt-get update \
-  && apt-get install -y php5-cli \
-  && HOME=/ /usr/bin/php /usr/local/bin/composer global require drush/drush:7.0.0 \
-  && /.composer/vendor/drush/drush/drush --version \
-  && apt-get -y remove php5-cli \
-  && apt-get clean \
-  && apt-get -y autoremove
-
-RUN mkdir /usr/include/freetype2/freetype \
-  && ln -s /usr/include/freetype2/freetype.h /usr/include/freetype2/freetype/freetype.h
-
-##
-# PHP 5.3.29
-ENV PHP_VERSION 5.3.29
-RUN gpg --keyserver pgp.mit.edu --recv-keys 0B96609E270F565C13292B24C13C70B87267B52D 0A95E9A026542D53835E3F3A7DEC4E69FC9C83D7
-
-RUN cd / \
-  && curl -SL "http://us2.php.net/get/php-$PHP_VERSION.tar.bz2/from/this/mirror" -o php.tar.bz2 \
-  && curl -SL "http://us2.php.net/get/php-$PHP_VERSION.tar.bz2.asc/from/this/mirror" -o php.tar.bz2.asc \
-  && gpg --verify php.tar.bz2.asc \
-  && mkdir -p /usr/src/php \
-  && tar -xf php.tar.bz2 -C /usr/src/php --strip-components=1 \
-  && rm php.tar.bz2* \
-  && cd /usr/src/php \
-  && ./configure \
-  --with-apxs2=/usr/bin/apxs2 \
-  --with-gd \
-  --enable-sockets \
-  --with-jpeg-dir=/usr \
-  --with-png-dir=/usr \
-  --enable-exif \
-  --enable-zip \
-  --with-zlib \
-  --with-zlib-dir=/usr \
-  --with-kerberos \
-  --with-openssl \
-  --with-mcrypt=/usr \
-  --enable-soap \
-  --enable-xmlreader \
-  --with-xsl \
-  --enable-ftp \
-  --enable-cgi \
-  --with-curl=/usr \
-  --with-tidy \
-  --with-xmlrpc \
-  --enable-sysvsem \
-  --enable-sysvshm \
-  --enable-shmop \
-  --with-mysql=mysqlnd \
-  --with-mysqli=mysqlnd \
-  --with-pdo-mysql=mysqlnd \
-  --with-pdo-sqlite \
-  --enable-pcntl \
-  --with-readline \
-  --enable-mbstring \
-  --disable-debug \
-  --enable-bcmath \
-  --with-gettext=shared \
-  --with-freetype-dir=/usr/lib/x86_64-linux-gnu \
-  && make -j"$(nproc)" \
-  && make install
-
-
-RUN echo | pecl install apc
-
-##
-# Upgrade curl to version 7.38
-##
-RUN apt-get update \
-    && apt-get -y install software-properties-common \
-    && add-apt-repository -y ppa:n-muench/programs-ppa2 \
-    && apt-get update \
-    && apt-get install -y curl \
-    && apt-get clean \
-    && apt-get -y autoremove
-
 ##
 # copying php.ini for compiled php
 ##
-
 RUN mkdir -p /usr/local/etc/php
 COPY ./conf/php/php.ini /usr/local/etc/php.ini
 COPY ./conf/php/apc.ini /usr/local/etc/php/apc.ini
