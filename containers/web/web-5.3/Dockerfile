@@ -8,59 +8,59 @@ ENV DRUPALCI TRUE
 ENV PHP_VERSION 5.3.29
 
 RUN buildDeps=" \
+    bison \
     build-essential \
     ccache \
-    libicu-dev \
+    libaspell-dev \
+    libbz2-dev \
+    libc-client-dev \
+    libcurl4-openssl-dev \
+    libdb5.1-dev \
     libfreetype6-dev \
+    libgmp3-dev \
+    libicu-dev \
     libjpeg-dev \
     libldap2-dev \
     libmcrypt-dev \
+    libmhash-dev \
+    libmysqlclient-dev \
+    libmysqlclient15-dev \
+    libpcre3-dev \
+    libpng-dev \
+    libpq-dev \
+    libreadline6-dev \
+    librecode-dev \
+    libsnmp-dev \
+    libsqlite-dev \
     libssl-dev \
+    libt1-dev \
+    libtidy-dev \
+    libxml2-dev \
+    libxpm-dev \
     libxslt-dev \
     libyaml-dev \
-    ncurses-dev \
+    libz-dev \
     make \
+    ncurses-dev \
     php5-cli \
     php5-dev \
     software-properties-common \
+    unixODBC-dev \
     " \
     && set -x \
     && apt-get update \
     && apt-get install -y \
         apache2 apache2-mpm-prefork apache2-dev \
-        bison \
         freetds-dev \
         git \
-        libaspell-dev \
-        libbz2-dev \
-        libc-client-dev \
-        libcurl4-openssl-dev \
-        libdb5.1-dev \
         libfontconfig \
-        libgmp3-dev \
         libicu52 \
         libjpeg8 \
-        libmhash-dev \
-        libmysqlclient-dev \
-        libmysqlclient15-dev \
-        libpcre3-dev \
-        libpng-dev \
-        libpq-dev \
-        libreadline6-dev \
-        librecode-dev \
-        libsnmp-dev \
-        libsqlite-dev \
-        libt1-dev \
-        libtidy-dev \
-        libxml2-dev \
-        libxpm-dev \
         libwebp5 \
-        libz-dev \
         mysql-client \
         re2c \
         sqlite3 \
         sudo \
-        unixODBC-dev \
         --no-install-recommends \
     && apt-get install -y $buildDeps --no-install-recommends \
     && add-apt-repository -y ppa:n-muench/programs-ppa2 \
