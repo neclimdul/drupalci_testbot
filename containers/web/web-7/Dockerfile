@@ -23,7 +23,7 @@ RUN buildDeps=" \
     && apt-get update && apt-get install -y curl git libc6 libcomerr2 libfreetype6 libgcc1 \
     libmcrypt4 libgcrypt20 libgpg-error0 libicu52 libjpeg62-turbo libkeyutils1 liblzma5 \
     libpng12-0 libpq5 libreadline6 libtidy-0.99-0 libtinfo5 libxslt1.1 libyaml-0-2 mysql-client \
-    postgresql-client sqlite3 sudo zlib1g --no-install-recommends \
+    postgresql-client sqlite3 sudo supervisor zlib1g --no-install-recommends \
     && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-install bcmath exif ftp gettext intl mcrypt mbstring mysqli opcache \
     pcntl pdo_mysql pdo_pgsql pgsql shmop soap sockets sysvsem sysvshm tidy wddx xmlrpc xsl zip \
