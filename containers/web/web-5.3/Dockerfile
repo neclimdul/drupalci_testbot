@@ -80,6 +80,7 @@ RUN buildDeps=" \
     && curl -o /usr/local/bin/composer http://getcomposer.org/composer.phar \
     && chmod 775 /usr/local/bin/composer \
     && HOME=/ /usr/bin/php /usr/local/bin/composer global require drush/drush:7.0.0 \
+    && ln -s /.composer/vendor/drush/drush/drush /usr/local/bin/drush \
     && /.composer/vendor/drush/drush/drush --version \
     && mkdir /usr/include/freetype2/freetype \
     && ln -s /usr/include/freetype2/freetype.h /usr/include/freetype2/freetype/freetype.h \
