@@ -50,27 +50,10 @@ RUN buildDeps=" \
     && set -x \
     && apt-get update \
     && apt-get install -y \
-        apache2 apache2-mpm-prefork apache2-dev \
-        freetds-dev \
-        git \
-        libc6 \
-        libgcc1 \
-        libmcrypt4 \
-        libfontconfig \
-        libgcrypt20 \
-        libicu52 \
-        libjpeg8 \
-        libkeyutils1 \
-        libpng12-0 \
-        libreadline6 \
-        libtidy-0.99-0 \
-        libwebp5 \
-        libxslt1.1 \
-        mysql-client \
-        re2c \
-        sqlite3 \
-        sudo \
-        zlib1g \
+        apache2 apache2-mpm-prefork apache2-dev freetds-dev git libc6 \
+        libgcc1 libmcrypt4 libfontconfig libgcrypt20 libicu52 libjpeg8 \
+        libkeyutils1 libpng12-0 libreadline6 libtidy-0.99-0 libwebp5 \
+        libxslt1.1 mysql-client re2c sqlite3 sudo zlib1g \
         --no-install-recommends \
     && apt-get install -y $buildDeps --no-install-recommends \
     && add-apt-repository -y ppa:n-muench/programs-ppa2 \
