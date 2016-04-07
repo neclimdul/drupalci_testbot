@@ -114,6 +114,7 @@ RUN buildDeps=" \
     && make -j"$(nproc)" \
     && make install \
     && echo | pecl install apc \
+    && echo | pecl install channel://pecl.php.net/xdebug-2.2.7 \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
 
 ##

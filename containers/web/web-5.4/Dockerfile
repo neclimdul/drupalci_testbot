@@ -29,6 +29,7 @@ RUN buildDeps=" \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install gd \
     && echo | pecl install apc \
+    && echo | pecl install xdebug \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
 
 RUN curl -o /usr/local/bin/composer http://getcomposer.org/composer.phar \
