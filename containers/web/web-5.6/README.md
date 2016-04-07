@@ -19,4 +19,4 @@ any of the following methods may be used:
 - docker pull drupalci/web-5.6
 
 If building the container images locally, this container depends on the
-existence of the 'drupalci/web-base' container image before it can be built.
+existence of the 'php:5.6.7-apache' container image before it can be built.
