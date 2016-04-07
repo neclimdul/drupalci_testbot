@@ -25,19 +25,19 @@ setup:
     - chown -fR www-data:www-data /var/www/html/sites /var/www/html/results
     - chmod 0777 /var/www/html/artifacts
     - chmod 0777 /tmp
-    - sudo bash -c "/opt/phpenv/shims/pecl list | grep -q yaml && cd /opt/phpenv/versions/ && ls | xargs -I {} -i bash -c 'echo extension=yaml.so > ./{}/etc/conf.d/yaml.ini' || echo -n"
+    - bash -c "pecl list | grep -q yaml && cd /usr/local/etc/php/conf.d/ && echo extension=yaml.so > yaml.ini || echo -n"
   syntaxcheck: true
 # The 'install' key is currently required for the dbcreate plugin
 # TODO: make dbcreate consistent with other commands and place in pre-install
 install:
 execute:
   command:
-    - daemon -- nohup /usr/bin/phantomjs --ssl-protocol=any --ignore-ssl-errors=true /var/www/html/vendor/jcalderonzumba/gastonjs/src/Client/main.js 8510 1024 768
-    - sleep 5
+    - supervisorctl start phantomjs
     - php -v
     - php %DCI_RunScript% --list --php /opt/phpenv/shims/php > /var/www/html/artifacts/testgroups.txt
   testcommand:
-    - cd /var/www/html && sudo -u www-data php %DCI_RunScript% --url http://localhost/checkout --dburl %DCI_DBurl% %DCI_RunOptions% %DCI_TestGroups%
+    - cd /var/www/html && sudo -u www-data php %DCI_RunScript% --url http://localhost/checkout --dburl %DCI_DBurl% %DCI_RunOptions% --types "Simpletest,PHPUnit-Unit,PHPUnit-Kernel,PHPUnit-Functional" %DCI_TestGroups%
+    - cd /var/www/html && sudo -u www-data php %DCI_RunScript% --url http://localhost/checkout --dburl %DCI_DBurl% %DCI_RunOptions% --concurrency 1 --keep-results-table --types PHPUnit-FunctionalJavascript %DCI_TestGroups%
 publish:
   gather_artifacts: /var/www/html/artifacts
   # archive: /var/www/html/results/artifacts.zip
