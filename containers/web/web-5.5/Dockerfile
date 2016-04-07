@@ -30,7 +30,9 @@ RUN buildDeps=" \
     && docker-php-ext-install gd \
     && echo | pecl install channel://pecl.php.net/APCu-4.0.7 \
     && pecl install yaml < /usr/lib/x86_64-linux-gnu \
-    && curl -SL "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2" -o /phantomjs-2.1.1-linux-x86_64.tar.bz2 \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
+
+RUN curl -SL "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2" -o /phantomjs-2.1.1-linux-x86_64.tar.bz2 \
     && tar -xf /phantomjs-2.1.1-linux-x86_64.tar.bz2 -C / \
     && mv /phantomjs-2.1.1-linux-x86_64/bin/phantomjs /usr/bin/phantomjs \
     && rm -f /phantomjs-2.1.1-linux-x86_64.tar.bz2 \
@@ -40,8 +42,8 @@ RUN buildDeps=" \
     && chmod 775 /usr/local/bin/composer \
     && curl -o /usr/local/bin/drush http://files.drush.org/drush.phar \
     && chmod +x /usr/local/bin/drush \
-    && /usr/local/bin/drush --version \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
+    && /usr/local/bin/drush --version
+
 
 COPY ./conf/apache2/vhost.conf /etc/apache2/sites-available/drupal.conf
 COPY ./conf/php/php.ini /usr/local/etc/php/php.ini

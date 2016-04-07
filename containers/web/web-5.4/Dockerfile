@@ -29,12 +29,14 @@ RUN buildDeps=" \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install gd \
     && echo | pecl install apc \
-    && curl -o /usr/local/bin/composer http://getcomposer.org/composer.phar \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
+
+RUN curl -o /usr/local/bin/composer http://getcomposer.org/composer.phar \
     && chmod 775 /usr/local/bin/composer \
     && curl -o /usr/local/bin/drush http://files.drush.org/drush.phar \
     && chmod +x /usr/local/bin/drush \
-    && /usr/local/bin/drush --version \
-    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
+    && /usr/local/bin/drush --version
+
 
 
 COPY ./conf/apache2/vhost.conf /etc/apache2/sites-available/drupal.conf
