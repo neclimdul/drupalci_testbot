@@ -24,10 +24,10 @@ RUN buildDeps=" \
     libpng12-0 libpq5 libreadline6 libtidy-0.99-0 libtinfo5 libxslt1.1 mysql-client \
     postgresql-client sqlite3 sudo zlib1g --no-install-recommends \
     && apt-get install -y $buildDeps --no-install-recommends && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-install bcmath exif ftp gettext intl mcrypt mbstring mysql mysqli \
+    && docker-php-ext-install -j$(nproc) bcmath exif ftp gettext intl mcrypt mbstring mysql mysqli \
     pcntl pdo_mysql pdo_pgsql pgsql shmop soap sockets sysvsem sysvshm tidy wddx xmlrpc xsl zip \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-install gd \
+    && docker-php-ext-install -j$(nproc) gd \
     && echo | pecl install apc \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
 
