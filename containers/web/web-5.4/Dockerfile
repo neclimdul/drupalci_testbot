@@ -38,8 +38,6 @@ RUN curl -o /usr/local/bin/composer http://getcomposer.org/composer.phar \
     && chmod +x /usr/local/bin/drush \
     && /usr/local/bin/drush --version
 
-
-
 COPY ./conf/apache2/vhost.conf /etc/apache2/sites-available/drupal.conf
 COPY ./conf/php/php.ini /usr/local/etc/php/php.ini
 COPY ./conf/php/php-cli.ini /usr/local/etc/php/php-cli.ini
