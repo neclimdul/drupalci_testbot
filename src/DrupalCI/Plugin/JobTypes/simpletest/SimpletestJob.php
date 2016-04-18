@@ -45,7 +45,7 @@ class SimpletestJob extends JobBase {
     'DCI_Concurrency' => 4,
     'DCI_GitCommitHash' => '',
     // 'DCI_XMLOutput' => '/var/www/html/results/xml',
-    'DCI_PHPInterpreter' => '/opt/phpenv/shims/php',
+    'DCI_PHPInterpreter' => '/usr/local/bin/php',
     'DCI_RunOptions' => 'color;keep-results',
     'DCI_SyntaxCheck' => TRUE,
   );
@@ -117,7 +117,7 @@ class SimpletestJob extends JobBase {
     'DCI_SQLite' => 'Defines the location of the sqlite database used to store test results.  Default: /var/www/html/results/simpletest.sqlite',
     'DCI_Concurrency' => 'Defines the value to pass to the --concurrency argument of the run script.  Default: 4',
     'DCI_XMLOutput' => 'Defines the directory where xml results will be stored.  Default: output/var/www/html/results/xml',
-    'DCI_PHPInterpreter' => 'Defines the php interpreter to be passed to the Run Script in the --php argument.  Default: /opt/phpenv/shims/php',
+    'DCI_PHPInterpreter' => 'Defines the php interpreter to be passed to the Run Script in the --php argument.  Default: /usr/local/bin/php',
     // Default: 'color;'
 
     // ***** Optional arguments *****

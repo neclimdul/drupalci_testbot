@@ -48,7 +48,7 @@ class SimpletestLegacy6Job extends JobBase {
     'DCI_DBUrl' => 'dbtype://host', // DBVersion, DBUser and DBPassword variable plugins will change this.
     'DCI_TestGroups' => '--all',
     'DCI_Concurrency' => 4,
-    'DCI_PHPInterpreter' => '/opt/phpenv/shims/php',
+    'DCI_PHPInterpreter' => '/usr/local/bin/php',
     'DCI_RunOptions' => 'color',
   );
 
@@ -118,7 +118,7 @@ class SimpletestLegacy6Job extends JobBase {
     'DCI_TestGroups' => 'Defines the target test groups to run.  Default: --all',
     'DCI_Concurrency' => 'Defines the value to pass to the --concurrency argument of the run script.  Default: 4',
     'DCI_XMLOutput' => 'Defines the directory where xml results will be stored.  Default: output/var/www/html/results/xml',
-    'DCI_PHPInterpreter' => 'Defines the php interpreter to be passed to the Run Script in the --php argument.  Default: /opt/phpenv/shims/php',
+    'DCI_PHPInterpreter' => 'Defines the php interpreter to be passed to the Run Script in the --php argument.  Default: /usr/local/bin/php',
     // Default: 'color;'
 
     // ***** Optional arguments *****

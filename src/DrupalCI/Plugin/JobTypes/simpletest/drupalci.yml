@@ -34,7 +34,7 @@ execute:
   command:
     - supervisorctl start phantomjs
     - php -v
-    - php %DCI_RunScript% --list --php /opt/phpenv/shims/php > /var/www/html/artifacts/testgroups.txt
+    - php %DCI_RunScript% --list --php /usr/local/bin/php > /var/www/html/artifacts/testgroups.txt
   testcommand:
     - cd /var/www/html && sudo -u www-data php %DCI_RunScript% --url http://localhost/checkout --dburl %DCI_DBurl% %DCI_RunOptions% --types "Simpletest,PHPUnit-Unit,PHPUnit-Kernel,PHPUnit-Functional" %DCI_TestGroups%
     - cd /var/www/html && sudo -u www-data php %DCI_RunScript% --url http://localhost/checkout --dburl %DCI_DBurl% %DCI_RunOptions% --concurrency 1 --keep-results-table --types PHPUnit-FunctionalJavascript %DCI_TestGroups%
@@ -42,4 +42,3 @@ publish:
   gather_artifacts: /var/www/html/artifacts
   # archive: /var/www/html/results/artifacts.zip
   # junit_xmlformat:
-
