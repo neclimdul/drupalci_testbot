@@ -133,8 +133,6 @@ RUN a2dismod mpm_event \
 ##
 RUN mkdir -p /usr/local/etc/php
 COPY ./conf/php/php.ini /usr/local/etc/php.ini
-COPY ./conf/php/apc.ini /usr/local/etc/php/apc.ini
-COPY ./conf/php/gettext.ini /usr/local/etc/php/gettext.ini
 
 COPY ./conf/start.sh /usr/local/bin/start.sh
 RUN chmod 775 /usr/local/bin/start.sh
