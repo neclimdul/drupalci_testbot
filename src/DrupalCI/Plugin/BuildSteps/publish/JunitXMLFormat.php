@@ -13,7 +13,7 @@ use Docker\Docker;
 use DrupalCI\Console\Output;
 use DrupalCI\Plugin\JobTypes\JobInterface;
 use DrupalCI\Plugin\PluginBase;
-use SQLite3;
+use PDO;
 use DOMDocument;
 
 /**
@@ -36,12 +36,20 @@ class JunitXMLFormat extends PluginBase {
    */
   public function run(JobInterface $job, $output_directory) {
     // Set up initial variable to store tests
+    $CoreBranch = $job->getBuildVars()["DCI_CoreBranch"];
+    $DBUrlArray = parse_url($job->getBuildVars()["DCI_DBUrl"]);
+    $DBVersion = $job->getBuildVars()["DCI_DBVersion"];
+    $DBScheme = $DBUrlArray["scheme"];
+    $DBUser   = (!empty($DBUrlArray["user"])) ? $DBUrlArray["user"] : "";
+    $DBPass   = (!empty($DBUrlArray["pass"])) ? $DBUrlArray["pass"] : "";
+    $DBDatabase = str_replace('/','',$DBUrlArray["path"]);
+    $DBIp = $job->getServiceContainers()["db"][$DBVersion]["ip"];
     $tests = [];
 
     // Load the list of tests from the testgroups.txt build artifact
     // Assumes that gatherArtifacts plugin has run.
     // TODO: Verify that gatherArtifacts has ran.
-    $source_dir = $job->getBuildVar('DCI_CheckoutDir');
+    $source_dir = $job->getJobCodebase()->getWorkingDir();
     // TODO: Temporary hack.  Strip /checkout off the directory
     $artifact_dir = preg_replace('#/checkout$#', '', $source_dir);
     $this->loadTestList($source_dir . DIRECTORY_SEPARATOR . 'artifacts/testgroups.txt');
@@ -54,22 +62,39 @@ class JunitXMLFormat extends PluginBase {
     $group = 'nogroup';
     // Iterate through and process the test list
     $test_list = $this->getTestlist();
-    foreach ($test_list as $output_line) {
-      if (substr($output_line, 0, 3) == ' - ') {
-        // This is a class
-        $class = substr($output_line, 3);
-        $test_groups[$class] = $group;
-      }
-      else {
-        // This is a group
-        $group = ucwords($output_line);
-      }
-    }
+    if(strcmp($CoreBranch,'7.x') === 0 || strcmp($CoreBranch,'6.x') === 0){
 
-    # TODO: get the sqlite dir from config.
-    $dbfile = $source_dir . DIRECTORY_SEPARATOR . 'artifacts' . DIRECTORY_SEPARATOR . basename($job->getBuildVar('DCI_SQLite'));
-    $db = new SQLite3($dbfile);
-    // Crack open the sqlite database.
+      foreach ($test_list as $output_line) {
+        if (substr($output_line, 0, 3) == ' - ') {
+          // This is a class
+          $class = str_replace(array('(',')'),'',end(explode(' ', $output_line)));
+          $test_groups[$class] = $group;
+        }
+        else {
+          // This is a group
+          $group = ucwords($output_line);
+        }
+      }
+      $PDO_con = "$DBScheme:host=$DBIp;dbname=$DBDatabase";
+      $db = new PDO( $PDO_con, $DBUser, $DBPass);
+
+    } else {
+
+      foreach ($test_list as $output_line) {
+        if (substr($output_line, 0, 3) == ' - ') {
+          // This is a class
+          $class = substr($output_line, 3);
+          $test_groups[$class] = $group;
+        }
+        else {
+          // This is a group
+          $group = ucwords($output_line);
+        }
+      }
+      // Crack open the sqlite database.
+      $dbfile = $source_dir . DIRECTORY_SEPARATOR . 'artifacts' . DIRECTORY_SEPARATOR . basename($job->getBuildVar('DCI_SQLite'));
+      $db = new PDO('sqlite:' . $dbfile);
+    }
 
     // query for simpletest results
     $results_map = array(
@@ -79,16 +104,16 @@ class JunitXMLFormat extends PluginBase {
       'debug' => 'Debug',
     );
 
-    $statement = $db->prepare('SELECT * FROM simpletest ORDER BY test_id, test_class, message_id;');
-    $q_result = $statement->execute();
+    $q_result = $db->query('SELECT * FROM simpletest ORDER BY test_id, test_class, message_id;');
 
     $results = array();
 
     $cases = 0;
     $errors = 0;
     $failures = 0;
-    while ($result = $q_result->fetchArray(SQLITE3_ASSOC)) {
 
+    //while ($result = $q_result->fetchAll()) {
+    while ($result = $q_result->fetch(PDO::FETCH_ASSOC)) {
       if (isset($results_map[$result['status']])) {
         // Set the group from the lookup table
         $test_group = $test_groups[$result['test_class']];
@@ -140,7 +165,6 @@ class JunitXMLFormat extends PluginBase {
     $total_tests = 0;
     $total_exceptions = 0;
 
-
     // Go through the groups, and create a testsuite for each.
     foreach ($test_result_data as $groupname => $group_classes) {
       $group_failures = 0;
@@ -151,7 +175,7 @@ class JunitXMLFormat extends PluginBase {
       $test_suite->setAttribute('name', $groupname);
       $test_suite->setAttribute('timestamp', date('c'));
       $test_suite->setAttribute('hostname', "TODO: Set Hostname");
-      $test_suite->setAttribute('package', "TODO: Set Package");
+      $test_suite->setAttribute('package', $groupname);
       // TODO: time test runs. $test_group->setAttribute('time', $test_group_id);
       // TODO: add in the properties of the job into the test run.
 
@@ -163,31 +187,35 @@ class JunitXMLFormat extends PluginBase {
           $test_case->setAttribute('name', $test_method);
           $test_case_status = 'pass';
           $test_case_assertions = 0;
+          $test_case_exceptions = 0;
+          $test_case_failures = 0;
           $test_output = '';
+          $fail_output = '';
+          $exception_output = '';
           foreach ($method_results as $assertion) {
+            $assertion_result = $assertion['status'] . ": [" . $assertion['type'] . "] Line " . $assertion['line'] . " of " . $assertion['file'] . ":\n" . $assertion['message'] . "\n\n";
+            $assertion_result = preg_replace('/[^\x{0009}\x{000A}\x{000D}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '�', $assertion_result);
 
+            // Keep track of overall assersions counts
             if (!isset($assertion_counter[$assertion['status']])) {
               $assertion_counter[$assertion['status']] = 0;
             }
             $assertion_counter[$assertion['status']]++;
-
-            if ($assertion['status'] == 'exception' || $assertion['status'] == 'fail') {
-              $element = $doc->createElement($element_map[$assertion['status']]);
-              $element->setAttribute('message', $assertion['message']);
-              $element->setAttribute('type', $assertion['status']);
-              // Assume that exceptions and fails are failed tests.
+            if ($assertion['status'] == 'exception') {
+              $test_case_exceptions++;
+              $group_exceptions++;
+              $total_exceptions++;
               $test_case_status = 'failed';
-              $test_case->appendChild($element);
-              if ($assertion['status'] == 'exception'){
-                $group_exceptions++;
-                $total_exceptions++;
-              } else if ($assertion['status'] == 'fail'){
-                $group_failures++;
-                $total_failures++;
-              }
+              $exception_output .= $assertion_result;
+            } else if ($assertion['status'] == 'fail'){
+              $test_case_failures++;
+              $group_failures++;
+              $total_failures++;
+              $test_case_status = 'failed';
+              $fail_output .= $assertion_result;
             }
-            elseif (($assertion['status'] == 'pass') || ($assertion['status'] == 'debug')) {
-             $test_output .= $assertion['status'] . ": [" . $assertion['type'] . "] Line " . $assertion['line'] . " of " . $assertion['file'] . ":\n" . $assertion['message'] . "\n\n";
+            elseif (($assertion['status'] == 'debug')) {
+              $test_output .= $assertion_result;
             }
 
             $test_case_assertions++;
@@ -195,7 +223,19 @@ class JunitXMLFormat extends PluginBase {
             $total_tests++;
 
           }
-          $test_output = preg_replace('/[^\x{0009}\x{000A}\x{000D}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '�', $test_output);
+          if ($test_case_failures > 0) {
+            $element = $doc->createElement("failure");
+            $element->setAttribute('message', $fail_output);
+            $element->setAttribute('type', "fail");
+            $test_case->appendChild($element);
+          }
+
+          if ($test_case_exceptions > 0 ) {
+            $element = $doc->createElement("error");
+            $element->setAttribute('message', $exception_output);
+            $element->setAttribute('type', "exception");
+            $test_case->appendChild($element);
+          }
           $std_out = $doc->createElement('system-out');
           $output = $doc->createCDATASection($test_output);
           $std_out->appendChild($output);

@@ -53,9 +53,25 @@ class ContainerCommand extends PluginBase {
             // Response stream is never read you need to simulate a wait in order to get output
             $result->getBody()->getContents();
             Output::writeLn((string) $result);
+            $inspection = $manager->execinspect($exec_id);
+
+            if ($this->checkCommandStatus($inspection->ExitCode) !==0) {
+              $job->error();
+              break 3;
+            }
           }
         }
       }
+    }
+  }
+
+  protected function checkCommandStatus($signal) {
+    if ($signal !==0) {
+      Output::error('Error', "Received a non-zero return code from the last command executed on the container.  (Return status: " . $signal . ")");
+      return 1;
+    }
+    else {
+      return 0;
     }
   }
 }

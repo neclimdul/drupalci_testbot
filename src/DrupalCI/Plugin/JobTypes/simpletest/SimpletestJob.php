@@ -16,14 +16,8 @@ use DrupalCI\Plugin\JobTypes\JobBase;
 class SimpletestJob extends JobBase {
 
   /**
-   * Job Type (jobType)
-   *
    * @var string
-   *
-   * This property is not referenced in the current code, but it is anticipated
-   * that others may want to reference the job type from the object itself at
-   * some point in the future.
-   */
+  */
   public $jobType = 'simpletest';
 
   /**
@@ -49,9 +43,11 @@ class SimpletestJob extends JobBase {
     'DCI_TestGroups' => '--all',
     'DCI_SQLite' => '/var/www/html/results/simpletest.sqlite',
     'DCI_Concurrency' => 4,
+    'DCI_GitCommitHash' => '',
     // 'DCI_XMLOutput' => '/var/www/html/results/xml',
     'DCI_PHPInterpreter' => '/opt/phpenv/shims/php',
-    'DCI_RunOptions' => 'color',
+    'DCI_RunOptions' => 'color;keep-results',
+    'DCI_SyntaxCheck' => TRUE,
   );
 
   /**
@@ -98,7 +94,7 @@ class SimpletestJob extends JobBase {
   public $availableArguments = array(
     // ***** Variables Available for any job type *****
     'DCI_UseLocalCodebase' => 'Used to define a local codebase to be cloned (instead of performing a Git checkout)',
-    'DCI_CheckoutDir' => 'Defines the location to be used in creating the local copy of the codebase, to be mapped into the container as a container volume.  Default: /tmp/simpletest-[random string]',
+    'DCI_WorkingDir' => 'Defines the location to be used in creating the local copy of the codebase, to be mapped into the container as a container volume.  Default: /tmp/simpletest-[random string]',
     'DCI_ResultsServer' => 'Specifies the url string of a DrupalCI results server for which to publish job results',
     'DCI_ResultsServerConfig' => 'Specifies the location of a configuration file on the test runner containg a DrupalCI Results Server configuration to use in publishing results.',
     'DCI_JobBuildId' => 'Specifies a unique build ID assigned to this job from an upstream server',
@@ -134,6 +130,23 @@ class SimpletestJob extends JobBase {
     'DCI_ResultsDirectory' => 'Defines the local directory within the container where the xml results file should be written.',
     'DCI_RunScriptArguments' => 'An array of other build script options which will be added to the runScript command when executing a job.',
     // Syntax: 'argkey1,argvalue1;argkey2,argvalue2;argkey3;argkey4,argvalue4;'
+    'DCI_GitCommitHash' => 'This allows to checkout specific core commits, useful for regression testing',
+  );
+
+  /**
+   * Identify any priority variables which must be pre-processed before others
+   *
+   * Variables provided in this array will be prioritized and run first, before
+   * any other DCI_* variable preprocessors are executed.
+   */
+  public $priorityArguments = array(
+    // CoreProject doesn't *need* to run first, but it seems like a good idea
+    'DCI_CoreProject',
+    // Expand run options to their argument format, before adding arguments
+    'DCI_RunOptions',
+    // CoreBranch needs to be able to override the SQLite variable before the
+    // SQLite option is added to RunOptions
+    'DCI_CoreBranch',
   );
 
   /**

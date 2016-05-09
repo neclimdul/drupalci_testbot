@@ -2,7 +2,8 @@ FROM drupalci/db-base
 MAINTAINER drupalci
 
 # Packages.
-RUN apt-get -qq -y install software-properties-common && \
+RUN apt-get -y update && \
+    apt-get -qq -y install software-properties-common && \
     apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 0xcbcb082a1bb943db && \
     add-apt-repository 'deb http://ftp.osuosl.org/pub/mariadb/repo/10.0/ubuntu trusty main' && \
     apt-get -y update && \

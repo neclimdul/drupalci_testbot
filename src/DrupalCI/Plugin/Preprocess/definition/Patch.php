@@ -28,14 +28,27 @@ class Patch {
    *   array('patch_file' => 'file2.patch', 'patch_directory' => 'patch_directory2')
    *       ...   ]
    */
-  public function process(array &$definition, $value) {
+  public function process(array &$definition, $value, $dci_variables) {
+    // Stash the patch definition so that we can make sure it happens after the fetch.
+    // TODO: unhack.
+    if (!empty($definition['setup']['composer'])) {
+      $composer_step = $definition['setup']['composer'];
+      unset($definition['setup']['composer']);
+    }
     if (empty($definition['setup']['patch'])) {
       $definition['setup']['patch'] = [];
     }
     foreach (explode(';', $value) as $patch_string) {
-      list($patch['patch_file'], $patch['patch_dir']) = explode(',', $patch_string);
+      if (strpos($patch_string, ',') === FALSE) {
+        list($patch['patch_file'], $patch['patch_dir']) = array($patch_string, '.');
+      }
+      else {
+        list($patch['patch_file'], $patch['patch_dir']) = explode(',', $patch_string);
+      }
       $definition['setup']['patch'][] = $patch;
+    }
+    if (!empty($composer_step)){
+          $definition['setup']['composer'] = $composer_step;
     }
   }
 }
-

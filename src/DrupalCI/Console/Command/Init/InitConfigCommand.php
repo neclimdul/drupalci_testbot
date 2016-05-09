@@ -39,7 +39,7 @@ class InitConfigCommand extends DrupalCICommandBase {
     $output->writeln("<info>Executing init:config</info>");
 
     # Check whether ~/.drupalci directory exists, and force option not called
-    # TODO: Parameterize the drupalci directory
+    # TODO: Parameterize the DrupalCI directory
 
     $homedir = getenv('HOME');
 

@@ -6,6 +6,7 @@ MAINTAINER drupalci
 ##
 RUN echo "--enable-intl" >> /opt/phpenv/plugins/php-build/share/php-build/default_configure_options && \
     echo "--enable-wddx" >> /opt/phpenv/plugins/php-build/share/php-build/default_configure_options && \
+    /opt/phpenv/plugins/php-build/install.sh && \
     sudo php-build -i development --pear 5.5.9 /opt/phpenv/versions/5.5.9 && \
     sudo php-build -i development --pear 5.5.23 /opt/phpenv/versions/5.5.23 && \
     sudo chown -R root:root /opt/phpenv && \
@@ -15,17 +16,20 @@ RUN echo "--enable-intl" >> /opt/phpenv/plugins/php-build/share/php-build/defaul
     rm -rf /tmp/pear /tmp/php-build*
 
 RUN phpenv global 5.5.9 && \
-    echo | pecl install mongo && \
     echo | pecl install channel://pecl.php.net/APCu-4.0.7 && \
+    pecl install yaml < /usr/lib/x86_64-linux-gnu && \
     phpenv global 5.5.23 && \
-    echo | pecl install mongo && \
-    echo | pecl install channel://pecl.php.net/APCu-4.0.7
+    echo | pecl install channel://pecl.php.net/APCu-4.0.7 && \
+    pecl install yaml < /usr/lib/x86_64-linux-gnu
 
 ## Set the default php version
 Run phpenv global 5.5.23
 
-## Upgrade curl to version 7.38
-RUN apt-get -y install software-properties-common && \
+##
+# Upgrade curl to version 7.38
+##
+RUN apt-get update && \
+    apt-get -y install software-properties-common && \
     add-apt-repository -y ppa:n-muench/programs-ppa2 && \
     apt-get update && \
     apt-get install -y curl && \
@@ -46,4 +50,4 @@ COPY ./conf/opt-apcu.ini /opt/phpenv/versions/5.5.23/etc/conf.d/apcu.ini
 COPY ./conf/opt-gettext.ini /opt/phpenv/versions/5.5.23/etc/conf.d/gettext.ini
 COPY ./conf/opt-xdebug.ini /opt/phpenv/versions/5.5.23/etc/conf.d/xdebug.ini
 
-CMD ["/bin/bash", "/start.sh"]
+CMD ["/usr/local/bin/start.sh"]

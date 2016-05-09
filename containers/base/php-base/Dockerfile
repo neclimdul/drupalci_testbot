@@ -7,6 +7,7 @@ MAINTAINER drupalci
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV HOME /root
+ENV DRUPALCI TRUE
 
 # Saves us from stale repository issues.
 # Build packages.
@@ -19,6 +20,7 @@ RUN apt-get clean && apt-get update && \
     bison \
     ccache \
     curl \
+    daemon \
     freetds-dev \
     git \
     libaspell-dev \
@@ -28,12 +30,9 @@ RUN apt-get clean && apt-get update && \
     libcurl4-openssl-dev \
     libdb5.1-dev \
     libfreetype6-dev \
-    libfreetype6-dev \
     libgmp3-dev \
     libicu-dev \
     libjpeg-dev \
-    libjpeg-dev \
-    libldap2-dev \
     libldap2-dev \
     libmcrypt-dev \
     libmhash-dev \
@@ -41,21 +40,18 @@ RUN apt-get clean && apt-get update && \
     libmysqlclient15-dev \
     libpcre3-dev \
     libpng-dev \
-    libpng-dev \
     libpq-dev \
     libreadline6-dev \
     librecode-dev \
     libsnmp-dev \
     libsqlite-dev \
     libt1-dev \
-    libt1-dev \
     libtidy-dev \
     libxml2-dev \
-    libxml2-dev libssl-dev \
+    libssl-dev \
     libxpm-dev \
-    libXpm-dev \
     libxslt-dev \
-    libxslt-dev \
+    libyaml-dev \
     libz-dev \
     make \
     mysql-client \
@@ -67,12 +63,27 @@ RUN apt-get clean && apt-get update && \
     software-properties-common \
     sqlite3 \
     sudo \
+    supervisor \
     unixODBC-dev \
     unzip \
-    supervisor \
-    sqlite3 && \
-   apt-get clean && apt-get autoremove -y && \
+    sqlite3 \
+    libicu52 \
+    libjpeg8 \
+    libfontconfig \
+    libwebp5 \
+    unzip && \
+    apt-get clean && apt-get autoremove -y && \
     rm /etc/cron.d/php5
+
+##
+# PhantomJS
+##
+RUN curl -L https://github.com/bprodoehl/phantomjs/releases/download/v2.0.0-20150528/phantomjs-2.0.0-20150528-u1404-x86_64.zip -o ~/phantomjs-2.0.zip && \
+    unzip -j ~/phantomjs-2.0.zip -d ~/phantomjs && \
+    mv ~/phantomjs/phantomjs /usr/bin/phantomjs && \
+    rm -f ~/phantomjs-2.0.zip && \
+    rm -rf ~/phantomjs && \
+    chmod 755 /usr/bin/phantomjs
 
 ##
 # PHPENV.
@@ -82,7 +93,9 @@ RUN git clone --depth 1 https://github.com/CHH/phpenv.git /tmp/phpenv && \
     PHPENV_ROOT="/opt/phpenv" /tmp/phpenv/bin/phpenv-install.sh && \
     scp /tmp/phpenv/extensions/* /opt/phpenv/libexec/ && \
     echo 'eval "$(phpenv init -)"' >> /root/.bashrc && \
-    git clone --depth 1 https://github.com/CHH/php-build.git /opt/phpenv/plugins/php-build
+    git clone https://github.com/php-build/php-build.git /opt/phpenv/plugins/php-build
+WORKDIR /opt/phpenv/plugins/php-build
+RUN    git reset --hard 2b1928b7ef7b3def9966db12eaf56d7966f834cd
 ENV PATH /opt/phpenv/shims:/opt/phpenv/bin:$PATH
 
 
@@ -94,7 +107,10 @@ ENV PATH /opt/phpenv/shims:/opt/phpenv/bin:$PATH
 ##
 # Adding with-gettext flag
 ##
-RUN echo "--with-gettext=shared" >> /opt/phpenv/plugins/php-build/share/php-build/default_configure_options
+RUN echo "--with-gettext=shared" >> /opt/phpenv/plugins/php-build/share/php-build/default_configure_options && \
+   echo "--with-freetype-dir=/usr/lib/x86_64-linux-gnu" >> /opt/phpenv/plugins/php-build/share/php-build/default_configure_options && \
+   echo "--with-pdo-pgsql" >> /opt/phpenv/plugins/php-build/share/php-build/default_configure_options && \
+   /opt/phpenv/plugins/php-build/install.sh
 
 ##
 # Composer.
@@ -106,15 +122,6 @@ RUN bash -c "wget http://getcomposer.org/composer.phar && chmod 775 composer.pha
 RUN HOME=/ /usr/local/bin/composer global require drush/drush:dev-master && \
     /.composer/vendor/drush/drush/drush --version
 
-# supervisor
-COPY ./conf/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Scripts.
-COPY ./conf/scripts/start.sh /start.sh
-COPY ./conf/mongodb.settings.php /mongodb.settings.php
-COPY ./conf/scripts/foreground.sh /etc/apache2/foreground.sh
-COPY daemon.sh /daemon.sh
-
-# Make start.sh executable.
-RUN chmod 755 /start.sh /daemon.sh
-
+COPY ./conf/start.sh /usr/local/bin/start.sh
+COPY ./conf/supervisor-phantomjs.conf /etc/supervisor/conf.d/phantomjs.conf
+RUN chmod 775 /usr/local/bin/start.sh

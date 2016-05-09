@@ -2,7 +2,7 @@
 Image:            "drupalci/web-5.5"
 
 # Docker command to use as the container PID 1
-Cmd:              ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+Cmd:              ["/usr/local/bin/start.sh"]
 
 # Mount point within the container for mounting the codebase directory / git checkout
 Mountpoint:       "/var/www/html"

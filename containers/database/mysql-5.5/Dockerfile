@@ -2,7 +2,8 @@ FROM drupalci/db-base
 MAINTAINER drupalci
 
 # Packages.
-RUN apt-get -y install mysql-server netcat
+RUN apt-get -y update && \
+    apt-get -y install mysql-server netcat
 
 RUN apt-get clean && apt-get autoclean && apt-get -y autoremove
 
