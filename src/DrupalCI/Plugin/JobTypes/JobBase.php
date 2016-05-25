@@ -9,6 +9,8 @@ namespace DrupalCI\Plugin\JobTypes;
 use Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use DrupalCI\Console\Output;
+use DrupalCI\Injectable;
+use DrupalCI\InjectableTrait;
 use DrupalCI\Job\Results\Artifacts\BuildArtifact;
 use DrupalCI\Job\Results\Artifacts\BuildArtifactList;
 use DrupalCI\Job\CodeBase\JobCodeBase;
@@ -27,7 +29,9 @@ use PDO;
 use Symfony\Component\Console\Event\ConsoleExceptionEvent;
 use Symfony\Component\Console\ConsoleEvents;
 
-class JobBase extends ContainerBase implements JobInterface {
+class JobBase extends ContainerBase implements JobInterface, Injectable {
+
+  use InjectableTrait;
 
   /**
    * Stores the job type
@@ -62,7 +66,10 @@ class JobBase extends ContainerBase implements JobInterface {
    */
   protected $jobDefinition = NULL;
   public function getJobDefinition() {  return $this->jobDefinition;  }
-  public function setJobDefinition(JobDefinition $job_definition) {  $this->jobDefinition = $job_definition; }
+  public function setJobDefinition(JobDefinition $job_definition) {
+    $job_definition->setContainer($this->container);
+    $this->jobDefinition = $job_definition;
+  }
 
   /**
    * Stores the codebase object for this job
@@ -280,43 +287,6 @@ class JobBase extends ContainerBase implements JobInterface {
         Output::writeln($buffer);
     });
    }
-
-  protected function discoverPlugins() {
-    $dir = __DIR__ . '/../../../DrupalCI/Plugin';
-    $plugin_definitions = [];
-    foreach (new \DirectoryIterator($dir) as $file) {
-      if ($file->isDir() && !$file->isDot()) {
-        $plugin_type = $file->getFilename();
-        $plugin_namespaces = ["DrupalCI\\Plugin\\$plugin_type" => ["$dir/$plugin_type"]];
-        $discovery  = new AnnotatedClassDiscovery($plugin_namespaces, 'Drupal\Component\Annotation\PluginID');
-        $plugin_definitions[$plugin_type] = $discovery->getDefinitions();
-      }
-    }
-    return $plugin_definitions;
-  }
-
-  /**
-   * @return \DrupalCI\Plugin\PluginBase
-   */
-  protected function getPlugin($type, $plugin_id, $configuration = []) {
-    if (!isset($this->pluginDefinitions)) {
-      $this->pluginDefinitions = $this->discoverPlugins();
-    }
-    if (!isset($this->plugins[$type][$plugin_id])) {
-      if (isset($this->pluginDefinitions[$type][$plugin_id])) {
-        $plugin_definition = $this->pluginDefinitions[$type][$plugin_id];
-      }
-      elseif (isset($this->pluginDefinitions['generic'][$plugin_id])) {
-        $plugin_definition = $this->pluginDefinitions['generic'][$plugin_id];
-      }
-      else {
-        throw new PluginNotFoundException("Plugin type $type plugin id $plugin_id not found.");
-      }
-      $this->plugins[$type][$plugin_id] = new $plugin_definition['class']($configuration, $plugin_id, $plugin_definition);
-    }
-    return $this->plugins[$type][$plugin_id];
-  }
-
 
   public function getExecContainers() {
     $configs = $this->executableContainers;

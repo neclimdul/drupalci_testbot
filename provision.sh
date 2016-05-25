@@ -61,8 +61,9 @@ else
 
   echo "Installing composer"
   curl -sS https://getcomposer.org/installer | php
-  echo "Running php composer.phar update"
-  php composer.phar update
+
+  echo "Running php composer.phar install"
+  php composer.phar install --no-progress
 
   echo "Creating drupalci symlink"
   ln -s /home/vagrant/drupalci_testbot /opt/drupalci_testbot

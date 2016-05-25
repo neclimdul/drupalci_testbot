@@ -9,13 +9,17 @@ namespace DrupalCI\Job\Definition;
 
 use DrupalCI\Console\Helpers\ConfigHelper;
 use DrupalCI\Console\Output;
+use DrupalCI\Injectable;
+use DrupalCI\InjectableTrait;
 use DrupalCI\Plugin\JobTypes\JobInterface;
 use DrupalCI\Plugin\PluginManager;
 use Symfony\Component\Filesystem\Exception\FileNotFoundException;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
-class JobDefinition {
+class JobDefinition Implements Injectable {
+
+  use InjectableTrait;
 
   // Location of our job definition template
   protected $template_file;
@@ -330,7 +334,7 @@ class JobDefinition {
    */
   protected function getPreprocessPluginManager() {
     if (!isset($this->pluginManager)) {
-      $this->pluginManager = new PluginManager('Preprocess');
+      $this->pluginManager = new PluginManager('Preprocess', $this->container);
     }
     return $this->pluginManager;
   }

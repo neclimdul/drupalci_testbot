@@ -60,5 +60,6 @@ class ConfigSaveCommand extends DrupalCICommandBase {
       }
     }
     $helper->saveCurrentConfig($config_name);
+    $output->writeln("<info>Configuration <option=bold>$config_name</option=bold> saved.</info>");
   }
 }

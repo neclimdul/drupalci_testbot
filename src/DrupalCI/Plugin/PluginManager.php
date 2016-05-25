@@ -8,8 +8,13 @@ namespace DrupalCI\Plugin;
 
 use Drupal\Component\Annotation\Plugin\Discovery\AnnotatedClassDiscovery;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use DrupalCI\Injectable;
+use DrupalCI\InjectableTrait;
+use Pimple\Container;
 
-class PluginManager {
+class PluginManager implements Injectable {
+
+  use InjectableTrait;
 
   /**
    * @var array
@@ -26,8 +31,9 @@ class PluginManager {
    */
   protected $pluginDefinitions;
 
-  public function __construct($super_plugin_type) {
+  public function __construct($super_plugin_type, Container $container) {
     $this->superPluginType = $super_plugin_type;
+    $this->container = $container;
   }
 
   /**
@@ -68,9 +74,12 @@ class PluginManager {
       $plugin_definition = isset($this->pluginDefinitions[$type][$plugin_id]) ?
         $this->pluginDefinitions[$type][$plugin_id] :
         $this->pluginDefinitions['generic'][$plugin_id];
-      $this->plugins[$type][$plugin_id] = new $plugin_definition['class']($configuration, $plugin_id, $plugin_definition);
+      $plugin = new $plugin_definition['class']($configuration, $plugin_id, $plugin_definition);
+      if ($plugin instanceof Injectable) {
+        $plugin->setContainer($this->container);
+      }
+      $this->plugins[$type][$plugin_id] = $plugin;
     }
     return $this->plugins[$type][$plugin_id];
   }
-
 }

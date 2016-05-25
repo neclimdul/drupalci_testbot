@@ -40,6 +40,7 @@ class DockerRemoveCommand extends DrupalCICommandBase {
     $type = $input->getArgument('type');
     if (!in_array($type, $types)) {
       $output->writeln('<error>' . $type . ' is not a legal container type.</error>');
+      return;
     }
 
     if ($input->getOption('list')) {

@@ -13,6 +13,8 @@ use DrupalCI\Console\Command\Init\InitDependenciesCommand;
 use DrupalCI\Console\Command\Init\InitDockerCommand;
 use DrupalCI\Console\Command\Init\InitWebContainersCommand;
 use DrupalCI\Console\Command\Init\InitPhpContainersCommand;
+use DrupalCI\InjectableTrait;
+use Pimple\Container;
 use Symfony\Component\Console\Application;
 use DrupalCI\Console\Command\Init\InitAllCommand;
 use DrupalCI\Console\Command\Init\InitConfigCommand;
@@ -29,42 +31,32 @@ use DrupalCI\Console\Command\Config\ConfigShowCommand;
 use DrupalCI\Console\Command\Config\ConfigClearCommand;
 use DrupalCI\Console\Command\Status\StatusCommand;
 use PrivateTravis\PrivateTravisCommand;
+use DrupalCI\Providers\ConsoleCommandProvider;
 
 class DrupalCIConsoleApp extends Application {
+
+  use InjectableTrait;
 
   /**
    * Constructor.
    *
-   * We just add our commands here. We don't do any discovery or a container/
-   * service model for simplicity.
-   * TODO: Add a container/service model.
+   * We'll store the injected container so that code with access to the app can
+   * access it as needed.
    */
-  public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN') {
+  public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', Container $container) {
     parent::__construct($name, $version);
-    $commands = [
-      new BuildCommand(),
-      new PullCommand(),
-      new ConfigListCommand(),
-      new ConfigLoadCommand(),
-      new ConfigResetCommand(),
-      new ConfigSaveCommand(),
-      new ConfigSetCommand(),
-      new ConfigShowCommand(),
-      new ConfigClearCommand(),
-      new DockerRemoveCommand(),
-      new InitAllCommand(),
-      new InitBaseContainersCommand(),
-      new InitDatabaseContainersCommand(),
-      new InitDependenciesCommand(),
-      new InitDockerCommand(),
-      new InitConfigCommand(),
-      new InitWebContainersCommand(),
-      new InitPhpContainersCommand(),
-      new RunCommand(),
-      new StatusCommand(),
-      new PrivateTravisCommand('travis'),
-    ];
-    $this->addCommands($commands);
+    $this->container = $container;
+    $container->register(new ConsoleCommandProvider());
+    $this->addCommands($container['commands']);
+  }
+
+  /**
+   * Access the application object's container.
+   *
+   * @return \Pimple\Container
+   */
+  public function getContainer() {
+    return $this->container;
   }
 
 }

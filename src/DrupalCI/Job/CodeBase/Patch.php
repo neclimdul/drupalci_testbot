@@ -9,8 +9,8 @@ namespace DrupalCI\Job\CodeBase;
 
 use DrupalCI\Console\Output;
 use DrupalCI\Job\CodeBase\JobCodeBase;
-use Guzzle\Http\Client;
-use Guzzle\Http\ClientInterface;
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 
 /**
  * Class Patch
@@ -160,12 +160,12 @@ class Patch
   }
 
   /**
-   * @var \Guzzle\Http\ClientInterface
+   * @var \GuzzleHttp\ClientInterface
    */
   protected $httpClient;
 
   /**
-   * @param string $patch_details
+   * @param string[] $patch_details
    * @param JobCodeBase $codebase
    */
   public function __construct($patch_details, $codebase)
@@ -214,9 +214,7 @@ class Patch
 
     $destination_file = $directory . DIRECTORY_SEPARATOR . $file_info['basename'];
     $this->httpClient()
-      ->get($url)
-      ->setResponseBody($destination_file)
-      ->send();
+      ->get($url, ['save_to' => "$destination_file"]);
     Output::writeln("<info>Patch downloaded to <options=bold>$destination_file</options=bold></info>");
     return $destination_file;
   }
@@ -325,7 +323,7 @@ class Patch
   }
 
   /**
-   * @return \Guzzle\Http\ClientInterface
+   * @return \GuzzleHttp\ClientInterface
    */
   protected function httpClient()
   {

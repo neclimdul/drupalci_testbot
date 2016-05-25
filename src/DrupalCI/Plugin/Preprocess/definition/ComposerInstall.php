@@ -5,6 +5,7 @@
  */
 
 namespace DrupalCI\Plugin\Preprocess\definition;
+use DrupalCI\Console\Output;
 
 /**
  * @PluginID("composerinstall")
@@ -19,6 +20,8 @@ class ComposerInstall {
    * {@inheritdoc}
    */
   public function process(array &$definition, $value, $dci_variables) {
+    // TODO: Ensure that $definition['execute'] exists (minimum requirement)
+    // TODO: Should composer go into the 'pre-install' step instead?
     // Check to see if Composer Install is set and true
     if (strtolower($value) !== 'true') {
       return;
@@ -29,14 +32,13 @@ class ComposerInstall {
       // If ['install'] exists, put it immediately before that key.  If not,
       // put it before the ['execute'] key.
       $new_array = [];
-      $search_key = (!empty($definition['install'])) ? 'install' : 'execute';
-      foreach ($definition as $key => $details) {
-        if ($key == $search_key) {
-          $new_array['setup'] = [];
-        }
-        $new_array[$key] = $details;
-      }
-      $definition = $new_array;
+      $search_key = (array_key_exists('install', $definition)) ? 'install' : 'execute';
+
+      $length = array_search($search_key, array_keys($definition));
+      $definition =
+        array_slice($definition, 0, $length, TRUE) +
+        ['setup' => []] +
+        array_slice($definition, $length, NULL, TRUE);
     }
 
     if (empty($definition['setup']['composer'])) {

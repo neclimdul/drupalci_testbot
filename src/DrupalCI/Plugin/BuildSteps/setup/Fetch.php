@@ -10,7 +10,7 @@ namespace DrupalCI\Plugin\BuildSteps\setup;
 
 use DrupalCI\Console\Output;
 use DrupalCI\Plugin\JobTypes\JobInterface;
-use Guzzle\Http\Client;
+use GuzzleHttp\Client;
 
 /**
  * @PluginID("fetch")
@@ -18,7 +18,7 @@ use Guzzle\Http\Client;
 class Fetch extends SetupBase {
 
   /**
-   * @var \Guzzle\Http\ClientInterface
+   * @var \GuzzleHttp\ClientInterface
    */
   protected $httpClient;
 
@@ -54,9 +54,7 @@ class Fetch extends SetupBase {
       try {
         $destination_file = $directory . "/" . $info['basename'];
         $this->httpClient()
-          ->get($url)
-          ->setResponseBody($destination_file)
-          ->send();
+          ->get($url, ['save_to' => $destination_file]);
       }
       catch (\Exception $e) {
         Output::error("Write error", "An error was encountered while attempting to write <info>$url</info> to <info>$directory</info>");
@@ -68,7 +66,7 @@ class Fetch extends SetupBase {
   }
 
   /**
-   * @return \Guzzle\Http\ClientInterface
+   * @return \GuzzleHttp\ClientInterface
    */
   protected function httpClient() {
     if (!isset($this->httpClient)) {

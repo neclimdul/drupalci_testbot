@@ -10,6 +10,7 @@ namespace DrupalCI\Job\CodeBase;
 use DrupalCI\Console\Output;
 use DrupalCI\Job\Definition\JobDefinition;
 use DrupalCI\Plugin\JobTypes\JobInterface;
+use DrupalCI\Job\CodeBase\Repository;
 
 class JobCodebase {
 
@@ -50,23 +51,9 @@ class JobCodebase {
   public function setCoreMajorVersion($core_major_version) {  $this->core_major_version = $core_major_version;  }
 
   /**
-   * The repositories used to generate this codebase
-   *
-   * @var \DrupalCI\Job\CodeBase\Repository
-   */
-  protected $repositories;
-  public function setRepositories($repositories) {  $this->repositories = $repositories;  }
-  public function getRepositories() {  return $this->repositories;  }
-  public function addRepository(Repository $repository) {
-    $repositories = $this->getRepositories();
-    $repositories[] = $repository;
-    $this->setRepositories($repository);
-  }
-
-  /**
    * Any patches used to generate this codebase
    *
-   * #var \DrupalCI\Job\Codebase\Patch
+   * @var \DrupalCI\Job\CodeBase\Patch[]
    */
   protected $patches;
   public function getPatches() { return $this->patches;  }

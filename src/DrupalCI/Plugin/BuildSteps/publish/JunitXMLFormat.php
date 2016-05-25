@@ -173,7 +173,9 @@ class JunitXMLFormat extends PluginBase {
       $test_suite = $doc->createElement('testsuite');
       $test_suite->setAttribute('id', $test_group_id);
       $test_suite->setAttribute('name', $groupname);
-      $test_suite->setAttribute('timestamp', date('c'));
+      // While more pure, we should probably inject a date/time service.
+      // For now we do not need the timestamp on group data.
+      //  $test_suite->setAttribute('timestamp', date('c'));
       $test_suite->setAttribute('hostname', "TODO: Set Hostname");
       $test_suite->setAttribute('package', $groupname);
       // TODO: time test runs. $test_group->setAttribute('time', $test_group_id);

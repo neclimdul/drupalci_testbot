@@ -42,5 +42,4 @@ publish:
   gather_artifacts: /var/www/html/artifacts
   # archive: /var/www/html/results/artifacts.zip
   # junit_xmlformat:
-#  drupalci_results:
-#    config: %HOME%/.drupalci/drupalci.yml
+

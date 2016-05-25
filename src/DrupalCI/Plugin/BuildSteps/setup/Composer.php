@@ -47,7 +47,7 @@ class Composer extends SetupBase {
    *   The full composer command string.
    */
   protected function buildComposerCommand($data, $workingdir) {
-    return "composer $data $workingdir";
+    return "./bin/composer $data $workingdir";
   }
 
 }

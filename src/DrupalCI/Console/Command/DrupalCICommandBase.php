@@ -7,29 +7,46 @@
 
 namespace DrupalCI\Console\Command;
 
+use DrupalCI\Console\Output;
+use DrupalCI\Providers\DockerServiceProvider;
 use Symfony\Component\Console\Command\Command as SymfonyCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
-use Docker\Docker;
-use Docker\Http\DockerClient as Client;
+use DrupalCI\Providers\ConsoleOutputServiceProvider;
 
 /**
  * Just some helpful debugging stuff for now.
  */
 class DrupalCICommandBase extends SymfonyCommand {
-    // Defaults for the underlying commands i.e. when commands run with --no-interaction or
-    // when we are given options to setup containers.
-    protected $default_build = array(
-      'base'     => 'all',
-      'web'      => 'drupalci/web-5.5',
-      'database' => 'drupalci/mysql-5.5',
-      'php'      => 'all'
-    );
 
-    // Holds our Docker container manager
-    protected $docker;
+  /**
+   * The container object.
+   *
+   * @var \Pimple\Container
+   */
+  protected $container;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initialize(InputInterface $input, OutputInterface $output) {
+    parent::initialize($input, $output);
+    // Perform some container set-up before command execution.
+    $this->container = $this->getApplication()->getContainer();
+    $this->container->register(new ConsoleOutputServiceProvider($output));
+  }
+
+
+  // Defaults for the underlying commands i.e. when commands run with --no-interaction or
+  // when we are given options to setup containers.
+  protected $default_build = array(
+    'base'     => 'all',
+    'web'      => 'drupalci/web-5.5',
+    'database' => 'drupalci/mysql-5.5',
+    'php'      => 'all'
+  );
 
   protected function showArguments(InputInterface $input, OutputInterface $output) {
     $output->writeln('<info>Arguments:</info>');
@@ -42,24 +59,14 @@ class DrupalCICommandBase extends SymfonyCommand {
     foreach($items as $name=>$value) {
       $output->writeln(' ' . $name . ': ' . print_r($value, TRUE));
     }
+  }
 
-    }
+  public function getDocker() {
+    return $this->container['docker'];
+  }
 
-  public function getDocker()
-    {
-        $client = Client::createWithEnv();
-        if (null === $this->docker) {
-            $this->docker = new Docker($client);
-        }
-        return $this->docker;
-    }
-
-
-  public function getManager()
-    {
-    // if (null === $this->getManager()) {
-      return $this->getDocker()->getImageManager();
-    // }
-    }
+  public function getManager() {
+    return $this->container['docker.image.manager'];
+  }
 
 }

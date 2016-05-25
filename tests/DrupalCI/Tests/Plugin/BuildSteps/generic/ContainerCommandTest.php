@@ -12,11 +12,14 @@ use DrupalCI\Plugin\BuildSteps\generic\ContainerCommand;
 use DrupalCI\Tests\DrupalCITestCase;
 
 /**
- * @covers ContainerCommand
+ * @coversDefaultClass DrupalCI\Plugin\BuildSteps\generic\ContainerCommand
  */
 class ContainerCommandTest extends DrupalCITestCase {
 
-  function testRun() {
+  /**
+   * @covers ::run
+   */
+  public function testRun() {
     $cmd = 'test_command test_argument';
     $instance = new Container([]);
 
@@ -40,23 +43,29 @@ class ContainerCommandTest extends DrupalCITestCase {
     $container_manager->expects($this->once())
       ->method('execstart')
       ->will($this->returnValue($response));
+    $container_manager->expects($this->once())
+      ->method('execinspect')
+      ->will($this->returnValue((object) ['ExitCode' => 0]));
 
     $docker = $this->getMockBuilder('Docker\Docker')
       ->disableOriginalConstructor()
+      ->setMethods(['getContainerManager'])
       ->getMock();
     $docker->expects($this->once())
       ->method('getContainerManager')
       ->will($this->returnValue($container_manager));
 
-    $this->job->expects($this->once())
+    $job = $this->getMockBuilder('DrupalCI\Plugin\JobTypes\JobInterface')
+      ->getMockForAbstractClass();
+    $job->expects($this->once())
       ->method('getDocker')
       ->will($this->returnValue($docker));
-    $this->job->expects($this->once())
+    $job->expects($this->once())
       ->method('getExecContainers')
       ->will($this->returnValue(['php' => [['id' => 'dockerci/php-5.4']]]));
 
     $command = new ContainerCommand();
-    $command->run($this->job, $cmd);
+    $command->run($job, $cmd);
   }
 
 }

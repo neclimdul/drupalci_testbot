@@ -176,7 +176,7 @@ Building a docker image with local changes. (Makes the last command to remove al
 
 Updating a single docker image from docker hub (should be current within about 1 hour):
 
-  docker pull drupalci/lweb-5.4 (or drupalci/mysql-5.5, etc)
+  docker pull drupalci/web-5.4 (or drupalci/mysql-5.5, etc)
   drupalci pull <image name> will also work.
 
 ---
@@ -196,7 +196,7 @@ Get a copy of the latest production testbot code.
 Now you need to install composer and initialize the Testbot’s Docker Containers (takes time):
 
   curl -sS https://getcomposer.org/installer | php
-  sudo mv composer.phar /usr/local/bin/composerq
+  sudo mv composer.phar /usr/local/bin/composer
   composer install
   sudo ./drupalci init
 

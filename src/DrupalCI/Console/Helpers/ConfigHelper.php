@@ -8,6 +8,7 @@
 namespace DrupalCI\Console\Helpers;
 
 use DrupalCI\Console\Helpers\DrupalCIHelperBase;
+use DrupalCI\Console\Output;
 
 class ConfigHelper extends DrupalCIHelperBase {
 
@@ -35,7 +36,8 @@ class ConfigHelper extends DrupalCIHelperBase {
     // TODO: Fix the hardcoded directory
     $options = glob('../../../../configsets/*');
     foreach ($options as $option) {
-      $filename = array_pop(explode('/', $option));
+      $optionpart = explode('/', $option);
+      $filename = array_pop($optionpart);
       $configsets[$filename] = $option;
     }
     return $configsets;
@@ -151,8 +153,8 @@ class ConfigHelper extends DrupalCIHelperBase {
   function saveCurrentConfig($config_name) {
     $homedir = getenv('HOME');
     $configpath = $homedir . '/.drupalci/';
-    $current = $configpath . '/config';
-    $filename = $configpath . '/configs/' . $config_name;
+    $current = $configpath . 'config';
+    $filename = $configpath . 'configs/' . $config_name;
     if (file_exists($current)) {
       copy($current, $filename);
     }

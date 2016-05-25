@@ -39,13 +39,17 @@ class Patch {
       $definition['setup']['patch'] = [];
     }
     foreach (explode(';', $value) as $patch_string) {
-      if (strpos($patch_string, ',') === FALSE) {
-        list($patch['patch_file'], $patch['patch_dir']) = array($patch_string, '.');
+      if (!empty($patch_string)) {
+        if (strpos($patch_string, ',') === FALSE) {
+          list($patch['patch_file'], $patch['patch_dir']) = array($patch_string, '.');
+        }
+        else {
+          $elements = explode(',', $patch_string);
+          $patch['patch_file'] = $elements[0];
+          $patch['patch_dir'] = (!empty($elements[1])) ? $elements[1] : '.';
+        }
+        $definition['setup']['patch'][] = $patch;
       }
-      else {
-        list($patch['patch_file'], $patch['patch_dir']) = explode(',', $patch_string);
-      }
-      $definition['setup']['patch'][] = $patch;
     }
     if (!empty($composer_step)){
           $definition['setup']['composer'] = $composer_step;
